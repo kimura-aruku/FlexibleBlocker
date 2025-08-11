@@ -75,12 +75,68 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         try {
             currentParsedUrl = parseUrl(currentUrl);
+            
+            // 単一パート（ドメインのみ）の場合は即座にブロック
+            if (currentParsedUrl.length === 1) {
+                addSiteDirectly(currentParsedUrl[0]);
+                return;
+            }
+            
+            // 複数パートがある場合のみ選択画面を表示
             displayUrlParts();
             notBlockedState.style.display = 'none';
             urlAnalysisSection.style.display = 'block';
         } catch (error) {
             console.error('URL parsing error:', error);
             showMessage('URLの解析に失敗しました', 'error');
+        }
+    }
+
+    // サイトを直接追加する関数
+    async function addSiteDirectly(siteToAdd) {
+        try {
+            // 既存のブロックリストを取得
+            const result = await chrome.storage.local.get(['blockedSites']);
+            const blockedSites = result.blockedSites || [];
+
+            // 重複チェック
+            if (blockedSites.includes(siteToAdd)) {
+                showMessage('このサイトは既にブロックされています', 'error');
+                return;
+            }
+
+            // 新しいサイトを追加
+            blockedSites.push(siteToAdd);
+            await chrome.storage.local.set({ blockedSites });
+
+            // ブロック中のサイト数を更新
+            await updateBlockedSitesCount();
+            await updateBlockStatus();
+            
+            showMessage('ブロック対象に追加しました: ' + siteToAdd);
+            
+            // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
+            if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteToAdd)) {
+                console.log('Current site matches new block rule, redirecting...');
+                const blockUrl = chrome.runtime.getURL('block.html') + '?blocked=' + encodeURIComponent(currentUrl);
+                try {
+                    // 少し遅延を入れてから確実にリダイレクト
+                    setTimeout(async () => {
+                        try {
+                            await chrome.tabs.update(currentTabId, { url: blockUrl });
+                            window.close(); // ポップアップを閉じる
+                        } catch (redirectError) {
+                            console.error('Error redirecting to block page:', redirectError);
+                        }
+                    }, 100);
+                } catch (error) {
+                    console.error('Error setting up redirect:', error);
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error adding site:', error);
+            showMessage('サイトの追加に失敗しました', 'error');
         }
     }
 

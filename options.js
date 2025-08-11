@@ -39,11 +39,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             currentParsedUrl = parseUrl(url);
+            
+            // 単一パート（ドメインのみ）の場合は即座にブロック
+            if (currentParsedUrl.length === 1) {
+                addSiteDirectly(currentParsedUrl[0]);
+                return;
+            }
+            
+            // 複数パートがある場合のみ選択画面を表示
             displayUrlParts();
             urlAnalysisSection.style.display = 'block';
         } catch (error) {
             console.error('URL parsing error:', error);
             alert('有効なURLを入力してください');
+        }
+    }
+
+    // サイトを直接追加する関数
+    async function addSiteDirectly(siteToAdd) {
+        try {
+            // 既存のブロックリストを取得
+            const result = await chrome.storage.local.get(['blockedSites']);
+            const blockedSites = result.blockedSites || [];
+
+            // 重複チェック
+            if (blockedSites.includes(siteToAdd)) {
+                alert('このサイトは既にブロックされています');
+                return;
+            }
+
+            // 新しいサイトを追加
+            blockedSites.push(siteToAdd);
+            await chrome.storage.local.set({ blockedSites });
+
+            // 入力フィールドをクリア
+            siteInput.value = '';
+
+            // リストを再読み込み
+            loadBlockedSites();
+            
+            alert('ブロック対象に追加しました: ' + siteToAdd);
+            
+        } catch (error) {
+            console.error('Error adding site:', error);
+            alert('サイトの追加に失敗しました');
         }
     }
 
