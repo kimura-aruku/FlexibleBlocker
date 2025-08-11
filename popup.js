@@ -113,8 +113,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             await updateBlockedSitesCount();
             await updateBlockStatus();
             
-            showMessage('ブロック対象に追加しました: ' + siteToAdd);
-            
             // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
             if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteToAdd)) {
                 console.log('Current site matches new block rule, redirecting...');
@@ -248,8 +246,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             // ブロック中のサイト数を更新
             await updateBlockedSitesCount();
             await updateBlockStatus();
-            
-            showMessage('ブロック対象に追加しました: ' + siteToAdd);
             
             // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
             if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteToAdd)) {

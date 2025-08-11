@@ -78,8 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // リストを再読み込み
             loadBlockedSites();
             
-            alert('ブロック対象に追加しました: ' + siteToAdd);
-            
         } catch (error) {
             console.error('Error adding site:', error);
             alert('サイトの追加に失敗しました');
@@ -194,8 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // リストを再読み込み
             loadBlockedSites();
-            
-            alert('ブロック対象に追加しました: ' + siteToAdd);
             
         } catch (error) {
             console.error('Error adding site:', error);
