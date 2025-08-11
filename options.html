@@ -15,16 +15,16 @@
             <div class="input-group">
                 <input type="text" id="siteInput" placeholder="ブロックしたいサイトのURLを入力" />
                 <button id="analyzeUrlBtn">ブロック</button>
+                <div class="help-tooltip" data-tooltip="1. ブロックしたいサイトの完全なURLを左の入力欄に貼り付け。&#10;2. 「ブロック」ボタンをクリック。&#10;3. 複数の階層がある場合は、ブロックしたい範囲をクリック。&#10;4. 「この範囲をブロックに追加」をクリック。&#10;&#10;※ ドメインのみのURLは即座にブロックされます。">
+                    <span class="help-icon">i</span>
+                </div>
             </div>
             
             <div class="simple-time-range-section">
                 <h4>ブロック時間帯</h4>
-                <div class="simple-time-input-group">
-                    <label for="directFromTime">開始時刻:</label>
+                <div class="inline-time-input-group">
                     <input type="time" id="directFromTime" value="00:00">
-                </div>
-                <div class="simple-time-input-group">
-                    <label for="directToTime">終了時刻:</label>
+                    <span class="time-separator">～</span>
                     <input type="time" id="directToTime" value="23:59">
                 </div>
                 <p class="time-note">※ 00:00-23:59 の場合は終日ブロックされます</p>
@@ -40,17 +40,6 @@
                     <code id="selectedUrl"></code>
                 </div>
                 <button id="addSelectedBtn" class="primary-btn">この範囲をブロックに追加</button>
-            </div>
-            
-            <div class="help-section">
-                <h3>使用方法</h3>
-                <ol class="help-list">
-                    <li>ブロックしたいサイトの完全なURLを上の入力欄に貼り付け</li>
-                    <li>「ブロック」ボタンをクリック</li>
-                    <li>複数の階層がある場合は、ブロックしたい範囲をクリック</li>
-                    <li>「この範囲をブロックに追加」をクリック</li>
-                </ol>
-                <p class="note">※ ドメインのみのURLは即座にブロックされます</p>
             </div>
         </div>
         

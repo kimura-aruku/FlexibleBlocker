@@ -20,12 +20,9 @@
         <div id="notBlockedState" style="display: none;">
             <div class="simple-time-range-section">
                 <h4>ブロック時間帯</h4>
-                <div class="simple-time-input-group">
-                    <label for="simpleFromTime">開始:</label>
+                <div class="inline-time-input-group">
                     <input type="time" id="simpleFromTime" value="00:00">
-                </div>
-                <div class="simple-time-input-group">
-                    <label for="simpleToTime">終了:</label>
+                    <span class="time-separator">～</span>
                     <input type="time" id="simpleToTime" value="23:59">
                 </div>
             </div>
@@ -36,7 +33,7 @@
         <!-- URL階層選択セクション -->
         <div id="urlAnalysisSection" class="url-analysis-section" style="display: none;">
             <h3>ブロック範囲を選択</h3>
-            <p class="note">クリックしてブロック範囲を選択してください</p>
+            <p class="note">クリックしてブロック範囲を選択してください。</p>
             <div id="urlParts" class="url-parts"></div>
             <div class="selected-url-preview">
                 <strong>選択されたブロック対象:</strong>
