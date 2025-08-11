@@ -68,24 +68,20 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const confirmMessage = `「${matchedBlockRule}」のブロックを解除しますか？\n解除後、元のサイトに自動的にリダイレクトします。`;
-        
-        if (confirm(confirmMessage)) {
-            try {
-                // ブロックリストから実際のルールを削除
-                const result = await chrome.storage.local.get(['blockedSites']);
-                const blockedSites = result.blockedSites || [];
-                const updatedSites = blockedSites.filter(site => site !== matchedBlockRule);
-                
-                await chrome.storage.local.set({ blockedSites: updatedSites });
-                
-                // 元のサイトにリダイレクト
-                window.location.href = originalUrl;
-                
-            } catch (error) {
-                console.error('Error unblocking site:', error);
-                alert('ブロック解除に失敗しました');
-            }
+        try {
+            // ブロックリストから実際のルールを削除
+            const result = await chrome.storage.local.get(['blockedSites']);
+            const blockedSites = result.blockedSites || [];
+            const updatedSites = blockedSites.filter(site => site !== matchedBlockRule);
+            
+            await chrome.storage.local.set({ blockedSites: updatedSites });
+            
+            // 元のサイトにリダイレクト
+            window.location.href = originalUrl;
+            
+        } catch (error) {
+            console.error('Error unblocking site:', error);
+            alert('ブロック解除に失敗しました');
         }
     });
 

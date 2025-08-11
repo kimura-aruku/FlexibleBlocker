@@ -207,10 +207,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // サイトを削除する関数
     async function removeSite(siteToRemove) {
-        if (!confirm(`${siteToRemove} をブロックリストから削除しますか？`)) {
-            return;
-        }
-
         try {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
