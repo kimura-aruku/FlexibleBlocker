@@ -1,7 +1,6 @@
 // ブロック画面の JavaScript
 document.addEventListener('DOMContentLoaded', function() {
     const blockedUrl = document.getElementById('blockedUrl');
-    const goBackBtn = document.getElementById('goBackBtn');
     const openSettingsBtn = document.getElementById('openSettingsBtn');
     const unblockBtn = document.getElementById('unblockBtn');
     const blockTime = document.getElementById('blockTime');
@@ -33,16 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // ブロック時刻を表示
     const now = new Date();
     blockTime.textContent = now.toLocaleString('ja-JP');
-
-    // 戻るボタンのクリックイベント
-    goBackBtn.addEventListener('click', function() {
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            // 履歴がない場合は新しいタブページに移動
-            window.location.href = 'chrome://newtab/';
-        }
-    });
 
     // 設定を開くボタンのクリックイベント
     openSettingsBtn.addEventListener('click', function() {
@@ -175,10 +164,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // キーボードショートカット
     document.addEventListener('keydown', function(e) {
-        // Escキーで戻る
-        if (e.key === 'Escape') {
-            goBackBtn.click();
-        }
         // Enterキーで設定を開く
         if (e.key === 'Enter') {
             openSettingsBtn.click();
