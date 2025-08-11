@@ -70,6 +70,20 @@ input[type="text"]:focus {
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
+input[type="time"] {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+}
+
+input[type="time"]:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
 /* ボタン */
 button, .btn {
     padding: 10px 16px;
@@ -285,6 +299,48 @@ button, .btn {
     border-radius: 3px;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 13px;
+}
+
+/* 時間帯設定セクション */
+.time-range-section {
+    margin: 16px 0;
+    padding: 16px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+}
+
+.time-range-section h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.time-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.time-input-group label {
+    font-size: 13px;
+    color: #555;
+    min-width: 60px;
+    font-weight: 500;
+}
+
+.time-input-group input[type="time"] {
+    flex: 1;
+    max-width: 120px;
+}
+
+.time-note {
+    margin: 8px 0 0 0;
+    font-size: 12px;
+    color: #6c757d;
+    font-style: italic;
 }
 
 /* プライマリボタンのスタイル調整 */

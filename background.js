@@ -101,7 +101,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 // 拡張機能のアイコンがクリックされた時の処理は popup.js で処理
 
 // URLがブロック対象かどうかを判定する関数
-function isUrlBlocked(currentUrl, blockedSite) {
+function isUrlBlocked(currentUrl, siteInfo) {
   try {
     const url = new URL(currentUrl);
     let hostname = url.hostname;
@@ -117,7 +117,7 @@ function isUrlBlocked(currentUrl, blockedSite) {
     const pathParts = pathname.split('/').filter(part => part.length > 0);
     
     // ブロック対象のサイトを / で分割
-    const blockedParts = blockedSite.split('/');
+    const blockedParts = siteInfo.url.split('/');
     const blockedDomain = blockedParts[0];
     const blockedPathParts = blockedParts.slice(1);
     
@@ -128,7 +128,8 @@ function isUrlBlocked(currentUrl, blockedSite) {
     
     // 2. ドメインのみの設定の場合（パス指定なし）
     if (blockedPathParts.length === 0) {
-      return true; // ドメインが一致すればブロック
+      // ドメインが一致した場合、時間帯をチェック
+      return isCurrentTimeBlocked(siteInfo.fromTime, siteInfo.toTime);
     }
     
     // 3. パス部分の一致チェック
@@ -142,11 +143,40 @@ function isUrlBlocked(currentUrl, blockedSite) {
       }
     }
     
-    // すべてのブロック対象パス部分が一致した
-    return true;
+    // URLマッチした場合、時間帯をチェック
+    return isCurrentTimeBlocked(siteInfo.fromTime, siteInfo.toTime);
     
   } catch (error) {
     console.error('Error checking URL:', error);
     return false;
   }
+}
+
+// 現在時刻がブロック時間帯に含まれるかをチェックする関数
+function isCurrentTimeBlocked(fromTime, toTime) {
+  if (fromTime === '00:00' && toTime === '23:59') {
+    return true; // 終日ブロック
+  }
+  
+  const now = new Date();
+  const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+  
+  // 時間を分に変換して比較
+  const currentMinutes = timeToMinutes(currentTime);
+  const fromMinutes = timeToMinutes(fromTime);
+  const toMinutes = timeToMinutes(toTime);
+  
+  if (fromMinutes <= toMinutes) {
+    // 通常の場合（例: 09:00-17:00）
+    return currentMinutes >= fromMinutes && currentMinutes <= toMinutes;
+  } else {
+    // 日をまたぐ場合（例: 22:00-06:00）
+    return currentMinutes >= fromMinutes || currentMinutes <= toMinutes;
+  }
+}
+
+// HH:MM形式の時間を分に変換する関数
+function timeToMinutes(timeStr) {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
 }

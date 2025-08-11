@@ -35,6 +35,18 @@
                 <strong>選択されたブロック対象:</strong>
                 <code id="selectedUrl"></code>
             </div>
+            <div class="time-range-section">
+                <h4>ブロック時間帯</h4>
+                <div class="time-input-group">
+                    <label for="fromTime">開始時刻:</label>
+                    <input type="time" id="fromTime" value="00:00">
+                </div>
+                <div class="time-input-group">
+                    <label for="toTime">終了時刻:</label>
+                    <input type="time" id="toTime" value="23:59">
+                </div>
+                <p class="time-note">※ 00:00-23:59 の場合は終日ブロックされます</p>
+            </div>
             <div class="popup-buttons">
                 <button id="addSelectedBtn" class="primary-btn">この範囲をブロックに追加</button>
                 <button id="cancelAnalysisBtn" class="secondary-btn">キャンセル</button>

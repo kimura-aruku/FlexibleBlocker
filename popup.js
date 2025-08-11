@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     const addSelectedBtn = document.getElementById('addSelectedBtn');
     const cancelAnalysisBtn = document.getElementById('cancelAnalysisBtn');
     const blockedRuleName = document.getElementById('blockedRuleName');
+    const fromTime = document.getElementById('fromTime');
+    const toTime = document.getElementById('toTime');
 
     let currentUrl = '';
     let currentTabId = null;
@@ -99,14 +101,21 @@ document.addEventListener('DOMContentLoaded', async function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
 
-            // 重複チェック
-            if (blockedSites.includes(siteToAdd)) {
+            // サイト情報オブジェクトを作成
+            const siteInfo = {
+                url: siteToAdd,
+                fromTime: '00:00',
+                toTime: '23:59'
+            };
+
+            // 重複チェック（URLでチェック）
+            if (blockedSites.some(site => site.url === siteToAdd)) {
                 showMessage('このサイトは既にブロックされています', 'error');
                 return;
             }
 
             // 新しいサイトを追加
-            blockedSites.push(siteToAdd);
+            blockedSites.push(siteInfo);
             await chrome.storage.local.set({ blockedSites });
 
             // ブロック中のサイト数を更新
@@ -114,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             await updateBlockStatus();
             
             // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
-            if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteToAdd)) {
+            if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteInfo)) {
                 console.log('Current site matches new block rule, redirecting...');
                 const blockUrl = chrome.runtime.getURL('block.html') + '?blocked=' + encodeURIComponent(currentUrl);
                 try {
@@ -228,14 +237,25 @@ document.addEventListener('DOMContentLoaded', async function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
 
-            // 重複チェック
-            if (blockedSites.includes(siteToAdd)) {
+            // 時間帯情報を取得
+            const fromTimeValue = fromTime.value || '00:00';
+            const toTimeValue = toTime.value || '23:59';
+
+            // サイト情報オブジェクトを作成
+            const siteInfo = {
+                url: siteToAdd,
+                fromTime: fromTimeValue,
+                toTime: toTimeValue
+            };
+
+            // 重複チェック（URLでチェック）
+            if (blockedSites.some(site => site.url === siteToAdd)) {
                 showMessage('このサイトは既にブロックされています', 'error');
                 return;
             }
 
             // 新しいサイトを追加
-            blockedSites.push(siteToAdd);
+            blockedSites.push(siteInfo);
             await chrome.storage.local.set({ blockedSites });
 
             // セクションをクリア
@@ -248,7 +268,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             await updateBlockStatus();
             
             // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
-            if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteToAdd)) {
+            if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteInfo)) {
                 console.log('Current site matches new block rule, redirecting...');
                 const blockUrl = chrome.runtime.getURL('block.html') + '?blocked=' + encodeURIComponent(currentUrl);
                 try {
@@ -288,19 +308,19 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (matchingSites.length > 0) {
                 // 最も具体的なルール（最も長いパス）を表示用として選択
                 const mostSpecificRule = matchingSites.reduce((prev, current) => {
-                    const prevParts = prev.split('/').length;
-                    const currentParts = current.split('/').length;
+                    const prevParts = prev.url.split('/').length;
+                    const currentParts = current.url.split('/').length;
                     
                     if (currentParts > prevParts) {
                         return current;
                     } else if (currentParts === prevParts) {
-                        return current.length > prev.length ? current : prev;
+                        return current.url.length > prev.url.length ? current : prev;
                     } else {
                         return prev;
                     }
                 });
                 
-                blockedRuleName.textContent = mostSpecificRule;
+                blockedRuleName.textContent = mostSpecificRule.url;
                 notBlockedState.style.display = 'none';
                 alreadyBlockedState.style.display = 'block';
             } else {
@@ -324,7 +344,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // URLブロック判定関数（background.jsと同じロジック）
-    function isUrlBlocked(currentUrl, blockedSite) {
+    function isUrlBlocked(currentUrl, siteInfo) {
         try {
             const url = new URL(currentUrl);
             let hostname = url.hostname;
@@ -338,7 +358,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const pathParts = pathname.split('/').filter(part => part.length > 0);
             
             // ブロック対象のサイトを / で分割
-            const blockedParts = blockedSite.split('/');
+            const blockedParts = siteInfo.url.split('/');
             const blockedDomain = blockedParts[0];
             const blockedPathParts = blockedParts.slice(1);
             
@@ -363,8 +383,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             }
             
-            // すべてのブロック対象パス部分が一致した
-            return true;
+            // URLマッチした場合、時間帯をチェック
+            return isCurrentTimeBlocked(siteInfo.fromTime, siteInfo.toTime);
             
         } catch (error) {
             console.error('Error checking URL:', error);
@@ -393,25 +413,25 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 最も具体的なルール（最も長いパス）を優先して削除
             // パス数で比較し、同じ場合は文字列長で比較
             const mostSpecificSite = matchingSites.reduce((prev, current) => {
-                const prevParts = prev.split('/').length;
-                const currentParts = current.split('/').length;
+                const prevParts = prev.url.split('/').length;
+                const currentParts = current.url.split('/').length;
                 
                 if (currentParts > prevParts) {
                     return current;
                 } else if (currentParts === prevParts) {
-                    return current.length > prev.length ? current : prev;
+                    return current.url.length > prev.url.length ? current : prev;
                 } else {
                     return prev;
                 }
             });
 
-            const updatedSites = blockedSites.filter(site => site !== mostSpecificSite);
+            const updatedSites = blockedSites.filter(site => site.url !== mostSpecificSite.url);
             await chrome.storage.local.set({ blockedSites: updatedSites });
             
             await updateBlockStatus();
             await updateBlockedSitesCount();
             
-            showMessage(`${mostSpecificSite} のブロックを解除しました`);
+            showMessage(`${mostSpecificSite.url} のブロックを解除しました`);
             
         } catch (error) {
             console.error('Error removing site from blocklist:', error);
@@ -443,5 +463,34 @@ document.addEventListener('DOMContentLoaded', async function() {
         setTimeout(() => {
             messageDiv.remove();
         }, 2000);
+    }
+
+    // 現在時刻がブロック時間帯に含まれるかをチェックする関数
+    function isCurrentTimeBlocked(fromTime, toTime) {
+        if (fromTime === '00:00' && toTime === '23:59') {
+            return true; // 終日ブロック
+        }
+        
+        const now = new Date();
+        const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        
+        // 時間を分に変換して比較
+        const currentMinutes = timeToMinutes(currentTime);
+        const fromMinutes = timeToMinutes(fromTime);
+        const toMinutes = timeToMinutes(toTime);
+        
+        if (fromMinutes <= toMinutes) {
+            // 通常の場合（例: 09:00-17:00）
+            return currentMinutes >= fromMinutes && currentMinutes <= toMinutes;
+        } else {
+            // 日をまたぐ場合（例: 22:00-06:00）
+            return currentMinutes >= fromMinutes || currentMinutes <= toMinutes;
+        }
+    }
+    
+    // HH:MM形式の時間を分に変換する関数
+    function timeToMinutes(timeStr) {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
     }
 });

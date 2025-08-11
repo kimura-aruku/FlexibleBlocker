@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlAnalysisSection = document.getElementById('urlAnalysisSection');
     const urlParts = document.getElementById('urlParts');
     const selectedUrl = document.getElementById('selectedUrl');
+    const fromTime = document.getElementById('fromTime');
+    const toTime = document.getElementById('toTime');
 
     let currentParsedUrl = null;
     let selectedIndex = -1;
@@ -62,14 +64,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
 
-            // 重複チェック
-            if (blockedSites.includes(siteToAdd)) {
+            // サイト情報オブジェクトを作成
+            const siteInfo = {
+                url: siteToAdd,
+                fromTime: '00:00',
+                toTime: '23:59'
+            };
+
+            // 重複チェック（URLでチェック）
+            if (blockedSites.some(site => site.url === siteToAdd)) {
                 alert('このサイトは既にブロックされています');
                 return;
             }
 
             // 新しいサイトを追加
-            blockedSites.push(siteToAdd);
+            blockedSites.push(siteInfo);
             await chrome.storage.local.set({ blockedSites });
 
             // 入力フィールドをクリア
@@ -174,14 +183,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
 
-            // 重複チェック
-            if (blockedSites.includes(siteToAdd)) {
+            // 時間帯情報を取得
+            const fromTimeValue = fromTime.value || '00:00';
+            const toTimeValue = toTime.value || '23:59';
+
+            // サイト情報オブジェクトを作成
+            const siteInfo = {
+                url: siteToAdd,
+                fromTime: fromTimeValue,
+                toTime: toTimeValue
+            };
+
+            // 重複チェック（URLでチェック）
+            if (blockedSites.some(site => site.url === siteToAdd)) {
                 alert('このサイトは既にブロックされています');
                 return;
             }
 
             // 新しいサイトを追加
-            blockedSites.push(siteToAdd);
+            blockedSites.push(siteInfo);
             await chrome.storage.local.set({ blockedSites });
 
             // 入力フィールドとセクションをクリア
@@ -224,18 +244,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // サイト要素を作成する関数
-    function createSiteElement(site) {
+    function createSiteElement(siteInfo) {
         const div = document.createElement('div');
         div.className = 'site-item';
         
+        // 時間帯表示の決定
+        let timeDisplay = '';
+        if (siteInfo.fromTime !== '00:00' || siteInfo.toTime !== '23:59') {
+            timeDisplay = ` (${siteInfo.fromTime}-${siteInfo.toTime})`;
+        }
+        
+        const url = typeof siteInfo === 'string' ? siteInfo : siteInfo.url;
+        
         div.innerHTML = `
-            <span class="site-name">${site}</span>
-            <button class="remove-btn" data-site="${site}">削除</button>
+            <span class="site-name">${url}${timeDisplay}</span>
+            <button class="remove-btn" data-site="${url}">削除</button>
         `;
 
         // 削除ボタンのイベントリスナー
         const removeBtn = div.querySelector('.remove-btn');
-        removeBtn.addEventListener('click', () => removeSite(site));
+        removeBtn.addEventListener('click', () => removeSite(url));
 
         return div;
     }
@@ -246,7 +274,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
             
-            const updatedSites = blockedSites.filter(site => site !== siteToRemove);
+            const updatedSites = blockedSites.filter(site => {
+                const url = typeof site === 'string' ? site : site.url;
+                return url !== siteToRemove;
+            });
             await chrome.storage.local.set({ blockedSites: updatedSites });
             
             loadBlockedSites();
