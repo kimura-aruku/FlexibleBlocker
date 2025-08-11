@@ -1,40 +1,64 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、Claude Code (claude.ai/code) がこのリポジトリで作業する際のガイダンスを提供します。
 
-## Project Overview
+## プロジェクト概要
 
-FlexibleBlocker is a Chrome extension (Manifest V3) that blocks access to specified websites during configured time periods, redirecting users to a warning page when blocked sites are accessed during restricted hours.
+FlexibleBlockerは、設定時間帯に指定したウェブサイトへアクセスした場合は警告ページへ強制的にリダイレクトするChrome拡張機能（Manifest V3）です。
 
-## Development
+## 主な機能
+- サイトごとにアクセス禁止時間帯を設定可能
+- 禁止時間帯に該当サイトへアクセスした場合、警告ページ（例：「このサイトはxx:xx～xx:xxの間、表示できません」）へリダイレクト
+- 設定内容はローカルストレージ（Chrome storage API）に保存
+- オプションページでサイトと時間帯の設定が可能
+- ポップアップUIによる簡単な操作
 
-This is a simple Chrome extension without build tools or package management. Files are loaded directly by Chrome.
+## 開発環境
 
-### Loading the Extension for Testing
-1. Open Chrome and go to `chrome://extensions/`
-2. Enable "Developer mode" 
-3. Click "Load unpacked" and select this directory
-4. The extension will be loaded and ready for testing
+この拡張機能はビルドツールやパッケージ管理を使用しないシンプルな構成です。ファイルはChromeに直接読み込まれます。
 
-### No Build Commands
-This extension uses vanilla JavaScript and HTML - no build step required. Changes to files take effect immediately after reloading the extension in Chrome.
+### テスト用拡張機能の読み込み方法
+1. Chromeを開き `chrome://extensions/` にアクセス
+2. 「デベロッパーモード」を有効にする
+3. 「パッケージ化されていない拡張機能を読み込む」をクリックし、このディレクトリを選択
+4. 拡張機能が読み込まれ、テストが可能になります
 
-## Architecture
+### ビルドコマンドなし
+この拡張機能はバニラJavaScriptとHTMLを使用 - ビルドステップは不要です。ファイルを変更した後は、Chromeで拡張機能を再読み込みすれば変更が反映されます。
 
-The extension follows standard Chrome Extension Manifest V3 patterns:
+## アーキテクチャ
 
-### Core Files (per 仕様書.md):
-- `manifest.json` - Extension manifest defining permissions and entry points
-- `content.js` - Content script for site access detection and redirect logic (currently empty)
-- `background.js` - Service worker for background processing (referenced in manifest but not yet created)
-- `options.html` & `options.js` - Settings UI for configuring blocked sites and time periods (not yet created)
-- `block.html` - Warning page shown when sites are blocked (not yet created)
+拡張機能は標準的なChrome Extension Manifest V3パターンに従います：
 
-### Data Storage
-Extension uses Chrome's `storage` API (permission declared in manifest) to persist user settings locally.
+### ファイル構成
+- `manifest.json` - 拡張機能のマニフェスト（権限とエントリポイントを定義）
+- `content.js` - 全ページで実行されるコンテンツスクリプト（現在は最小限の実装）
+- `background.js` - バックグラウンド処理を行うサービスワーカー
+- `options.html` & `options.js` - ブロック対象サイトと時間帯設定用UI
+- `popup.html` & `popup.js` - 拡張機能アイコンクリック時のポップアップUI
+- `block.html` & `block.js` - ブロック時に表示される警告ページ
+- `styles.css` - 共通スタイルシート
 
-### URL Blocking Logic
-Extension has `<all_urls>` host permission and `webNavigation` permission to monitor and control all web traffic.
+### データ保存
+拡張機能はChromeの `storage` API（manifestで権限宣言済み）を使用してユーザー設定をローカルに永続化します。
 
-## Current State
-The project has basic structure with manifest.json and empty content.js. Core functionality (blocking logic, options UI, warning page) needs to be implemented according to the specifications in 仕様書.md.
+### URLブロック処理の流れ
+1. ユーザーがオプションページで、ブロックしたいサイトとその時間帯を設定
+2. 拡張機能は現在時刻と設定内容をもとに、アクセス制限が必要かどうかを判定
+3. 禁止時間帯に該当サイトへアクセスした場合、警告ページにリダイレクト
+
+### 権限
+- `<all_urls>` - 全URLへのアクセス監視のため
+- `webNavigation` - ナビゲーションイベントの監視
+- `activeTab` & `tabs` - アクティブタブの制御
+- `storage` - 設定データの保存
+
+## 現在の実装状況
+- 基本的なファイル構造は完成（manifest.json、各HTMLファイル、JSファイル）
+- content.js は最小限の実装（主な処理はbackground.jsで実行）
+- 仕様書.mdに基づく核心機能（ブロック判定ロジック、オプションUI、警告ページ）の実装が必要
+
+## 将来の拡張案
+- 曜日ごとの設定
+- 1日にアクセスできる回数の設定
+- パスワードによる解除
