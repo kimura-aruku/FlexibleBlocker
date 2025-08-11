@@ -172,6 +172,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     function displayUrlParts() {
         urlParts.innerHTML = '';
         selectedIndex = -1;
+        
+        // 注意メッセージを赤色にする（初期状態）
+        const noteElement = document.querySelector('#urlAnalysisSection .note');
+        noteElement.classList.add('warning');
 
         currentParsedUrl.forEach((part, index) => {
             const partElement = document.createElement('span');
@@ -199,6 +203,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     function selectUrlPart(index) {
         selectedIndex = index;
         
+        // 選択されたので注意メッセージの赤色を解除
+        const noteElement = document.querySelector('#urlAnalysisSection .note');
+        noteElement.classList.remove('warning');
+        
         // 全ての部分のスタイルをリセット
         document.querySelectorAll('.url-part').forEach((element, i) => {
             if (i <= index) {
@@ -224,7 +232,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 選択されたサイトを追加する関数
     async function addSelectedSite() {
         if (selectedIndex < 0 || !currentParsedUrl) {
-            showMessage('ブロック範囲を選択してください', 'error');
+            // すべてのURLパーツを揺らす
+            document.querySelectorAll('.url-part').forEach(part => {
+                part.classList.add('shake');
+            });
+            
+            // アニメーション終了後にクラスを削除
+            setTimeout(() => {
+                document.querySelectorAll('.url-part').forEach(part => {
+                    part.classList.remove('shake');
+                });
+            }, 500);
+            
             return;
         }
 
