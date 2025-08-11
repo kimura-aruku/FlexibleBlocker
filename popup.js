@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const notBlockedState = document.getElementById('notBlockedState');
     const alreadyBlockedState = document.getElementById('alreadyBlockedState');
     const blockCurrentSiteBtn = document.getElementById('blockCurrentSiteBtn');
-    const blockStatusMessage = document.getElementById('blockStatusMessage');
     const unblockCurrentSiteBtn = document.getElementById('unblockCurrentSiteBtn');
     const openOptionsBtn = document.getElementById('openOptionsBtn');
     const blockedSitesCount = document.getElementById('count');
@@ -13,8 +12,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     const addSelectedBtn = document.getElementById('addSelectedBtn');
     const cancelAnalysisBtn = document.getElementById('cancelAnalysisBtn');
     const blockedRuleName = document.getElementById('blockedRuleName');
-    const fromTime = document.getElementById('fromTime');
-    const toTime = document.getElementById('toTime');
+    const simpleFromTime = document.getElementById('simpleFromTime');
+    const simpleToTime = document.getElementById('simpleToTime');
 
     let currentUrl = '';
     let currentTabId = null;
@@ -60,7 +59,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     // キャンセルボタン
     cancelAnalysisBtn.addEventListener('click', function() {
         urlAnalysisSection.style.display = 'none';
-        notBlockedState.style.display = 'block';
+        // ボタンを再表示
+        blockCurrentSiteBtn.style.display = 'block';
     });
 
     // 設定画面を開くボタンのクリックイベント
@@ -87,7 +87,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             // 複数パートがある場合のみ選択画面を表示
             displayUrlParts();
-            notBlockedState.style.display = 'none';
+            // ボタンのみ非表示にして時間帯入力は表示したまま
+            blockCurrentSiteBtn.style.display = 'none';
             urlAnalysisSection.style.display = 'block';
         } catch (error) {
             console.error('URL parsing error:', error);
@@ -102,11 +103,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
 
+            // シンプル時間入力フィールドから値を取得
+            const fromTimeValue = simpleFromTime.value || '00:00';
+            const toTimeValue = simpleToTime.value || '23:59';
+
             // サイト情報オブジェクトを作成
             const siteInfo = {
                 url: siteToAdd,
-                fromTime: '00:00',
-                toTime: '23:59'
+                fromTime: fromTimeValue,
+                toTime: toTimeValue
             };
 
             // 重複チェック（URLでチェック）
@@ -238,9 +243,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
 
-            // 時間帯情報を取得
-            const fromTimeValue = fromTime.value || '00:00';
-            const toTimeValue = toTime.value || '23:59';
+            // 時間帯情報を取得（上部のシンプル時間入力フィールドから）
+            const fromTimeValue = simpleFromTime.value || '00:00';
+            const toTimeValue = simpleToTime.value || '23:59';
 
             // サイト情報オブジェクトを作成
             const siteInfo = {
@@ -261,6 +266,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // セクションをクリア
             urlAnalysisSection.style.display = 'none';
+            // ボタンを再表示
+            blockCurrentSiteBtn.style.display = 'block';
             currentParsedUrl = null;
             selectedIndex = -1;
 
@@ -347,9 +354,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 blockCurrentSiteBtn.disabled = true;
                 blockCurrentSiteBtn.textContent = 'ブロック設定済み';
                 
-                const timeDisplay = formatTimeRange(mostSpecificRule.fromTime, mostSpecificRule.toTime);
-                blockStatusMessage.textContent = `ブロック指定済み（${timeDisplay}）`;
-                blockStatusMessage.style.display = 'block';
+                // 時間入力フィールドに設定済み時間を表示して無効化
+                simpleFromTime.value = mostSpecificRule.fromTime;
+                simpleToTime.value = mostSpecificRule.toTime;
+                simpleFromTime.disabled = true;
+                simpleToTime.disabled = true;
+                
                 
                 notBlockedState.style.display = 'block';
                 alreadyBlockedState.style.display = 'none';
@@ -357,7 +367,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 // ブロック設定なし - 通常状態
                 blockCurrentSiteBtn.disabled = false;
                 blockCurrentSiteBtn.textContent = 'このサイトをブロック';
-                blockStatusMessage.style.display = 'none';
+                
+                // 時間入力フィールドを有効化
+                simpleFromTime.disabled = false;
+                simpleToTime.disabled = false;
                 
                 notBlockedState.style.display = 'block';
                 alreadyBlockedState.style.display = 'none';

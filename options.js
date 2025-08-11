@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedUrl = document.getElementById('selectedUrl');
     const fromTime = document.getElementById('fromTime');
     const toTime = document.getElementById('toTime');
+    const directFromTime = document.getElementById('directFromTime');
+    const directToTime = document.getElementById('directToTime');
 
     let currentParsedUrl = null;
     let selectedIndex = -1;
@@ -64,11 +66,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
 
+            // 直接時間入力フィールドから値を取得
+            const fromTimeValue = directFromTime.value || '00:00';
+            const toTimeValue = directToTime.value || '23:59';
+
             // サイト情報オブジェクトを作成
             const siteInfo = {
                 url: siteToAdd,
-                fromTime: '00:00',
-                toTime: '23:59'
+                fromTime: fromTimeValue,
+                toTime: toTimeValue
             };
 
             // 重複チェック（URLでチェック）
@@ -183,9 +189,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
 
-            // 時間帯情報を取得
-            const fromTimeValue = fromTime.value || '00:00';
-            const toTimeValue = toTime.value || '23:59';
+            // 時間帯情報を取得（上部の直接時間入力フィールドから）
+            const fromTimeValue = directFromTime.value || '00:00';
+            const toTimeValue = directToTime.value || '23:59';
 
             // サイト情報オブジェクトを作成
             const siteInfo = {
