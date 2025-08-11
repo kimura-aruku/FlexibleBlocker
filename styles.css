@@ -40,6 +40,10 @@ h2 {
     margin-top: 24px;
 }
 
+.section-title {
+    margin-top: 0px;
+}
+
 /* セクション */
 .section {
     margin-bottom: 32px;
