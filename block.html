@@ -18,7 +18,7 @@
         
         .block-container {
             background: white;
-            padding: 40px;
+            padding: 28px 40px;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             text-align: center;
@@ -29,13 +29,14 @@
         .block-icon {
             font-size: 64px;
             color: #ff6b6b;
-            margin-bottom: 20px;
         }
         
         .block-title {
             font-size: 24px;
             color: #333;
+            margin-top: 8px;
             margin-bottom: 16px;
+            padding-bottom: 40px;
             font-weight: 600;
         }
         
@@ -45,9 +46,8 @@
             background: #f8f9fa;
             padding: 12px;
             border-radius: 8px;
-            margin: 20px 0;
+            margin: 16px 0;
             word-break: break-all;
-            border-left: 4px solid #ff6b6b;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         }
         
@@ -64,10 +64,6 @@
             color: #666;
             line-height: 1.6;
             margin: 20px 0;
-        }
-        
-        .actions {
-            margin-top: 30px;
         }
         
         .btn {
@@ -129,16 +125,12 @@
 <body>
     <div class="block-container">
         <div class="block-icon">🚫</div>
-        <h1 class="block-title">このサイトはブロック中です</h1>
+        <h1 class="block-title">このサイトはFlexibleBlockerが<br>ブロック中です</h1>
         
         <div class="blocked-site">
             <strong id="blockedUrl">読み込み中...</strong>
         </div>
         
-        <div class="block-message">
-            このサイトはFlexibleBlockerによってブロックされています。<br>
-            アクセスを許可するには、拡張機能の設定でブロックを解除してください。
-        </div>
         
         <div class="actions">
             <button id="openSettingsBtn" class="btn btn-primary">設定を開く</button>
