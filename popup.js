@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const blockedRuleName = document.getElementById('blockedRuleName');
 
     let currentUrl = '';
+    let currentTabId = null;
     let currentParsedUrl = null;
     let selectedIndex = -1;
     
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (tabs[0]) {
             const url = new URL(tabs[0].url);
             currentUrl = tabs[0].url;
+            currentTabId = tabs[0].id;
             
             // Chrome拡張ページなど特殊なページの場合
             if (url.protocol === 'chrome:' || url.protocol === 'chrome-extension:') {
@@ -192,6 +194,25 @@ document.addEventListener('DOMContentLoaded', async function() {
             await updateBlockStatus();
             
             showMessage('ブロック対象に追加しました: ' + siteToAdd);
+            
+            // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
+            if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteToAdd)) {
+                console.log('Current site matches new block rule, redirecting...');
+                const blockUrl = chrome.runtime.getURL('block.html') + '?blocked=' + encodeURIComponent(currentUrl);
+                try {
+                    // 少し遅延を入れてから確実にリダイレクト
+                    setTimeout(async () => {
+                        try {
+                            await chrome.tabs.update(currentTabId, { url: blockUrl });
+                            window.close(); // ポップアップを閉じる
+                        } catch (redirectError) {
+                            console.error('Error redirecting to block page:', redirectError);
+                        }
+                    }, 100);
+                } catch (error) {
+                    console.error('Error setting up redirect:', error);
+                }
+            }
             
         } catch (error) {
             console.error('Error adding site:', error);
