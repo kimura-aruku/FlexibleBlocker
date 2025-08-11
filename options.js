@@ -224,18 +224,21 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
+            const sitesTable = document.getElementById('blockedSitesTable');
 
             if (blockedSites.length === 0) {
                 blockedSitesList.innerHTML = '';
                 noSitesMessage.style.display = 'block';
+                sitesTable.style.display = 'none';
                 return;
             }
 
             noSitesMessage.style.display = 'none';
+            sitesTable.style.display = 'table';
             blockedSitesList.innerHTML = '';
 
             blockedSites.forEach(site => {
-                const siteElement = createSiteElement(site);
+                const siteElement = createSiteTableRow(site);
                 blockedSitesList.appendChild(siteElement);
             });
         } catch (error) {
@@ -243,29 +246,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // サイト要素を作成する関数
-    function createSiteElement(siteInfo) {
-        const div = document.createElement('div');
-        div.className = 'site-item';
+    // サイトテーブル行を作成する関数
+    function createSiteTableRow(siteInfo) {
+        const tr = document.createElement('tr');
         
         // 時間帯表示の決定
-        let timeDisplay = '';
-        if (siteInfo.fromTime !== '00:00' || siteInfo.toTime !== '23:59') {
-            timeDisplay = ` (${siteInfo.fromTime}-${siteInfo.toTime})`;
-        }
-        
+        const timeDisplay = formatTimeRange(siteInfo.fromTime, siteInfo.toTime);
         const url = typeof siteInfo === 'string' ? siteInfo : siteInfo.url;
         
-        div.innerHTML = `
-            <span class="site-name">${url}${timeDisplay}</span>
-            <button class="remove-btn" data-site="${url}">削除</button>
+        tr.innerHTML = `
+            <td class="url-cell">${url}</td>
+            <td class="time-cell">${timeDisplay}</td>
+            <td class="action-cell">
+                <button class="remove-btn" data-site="${url}">削除</button>
+            </td>
         `;
 
         // 削除ボタンのイベントリスナー
-        const removeBtn = div.querySelector('.remove-btn');
+        const removeBtn = tr.querySelector('.remove-btn');
         removeBtn.addEventListener('click', () => removeSite(url));
 
-        return div;
+        return tr;
+    }
+
+    // 時間帯を表示用にフォーマットする関数
+    function formatTimeRange(fromTime, toTime) {
+        if (fromTime === '00:00' && toTime === '23:59') {
+            return '終日';
+        }
+        return `${fromTime}～${toTime}`;
     }
 
     // サイトを削除する関数

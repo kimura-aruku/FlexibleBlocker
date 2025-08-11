@@ -1,6 +1,7 @@
 // ブロック画面の JavaScript
 document.addEventListener('DOMContentLoaded', function() {
     const blockedUrl = document.getElementById('blockedUrl');
+    const blockTimeRange = document.getElementById('blockTimeRange');
     const openSettingsBtn = document.getElementById('openSettingsBtn');
     const unblockBtn = document.getElementById('unblockBtn');
     const blockTime = document.getElementById('blockTime');
@@ -16,17 +17,23 @@ document.addEventListener('DOMContentLoaded', function() {
             matchedBlockRule = ruleInfo;
             if (ruleInfo) {
                 blockedUrl.textContent = ruleInfo.url;
+                // 時間帯表示を設定
+                const timeDisplay = formatTimeRange(ruleInfo.fromTime, ruleInfo.toTime);
+                blockTimeRange.textContent = timeDisplay;
             } else {
                 try {
                     const url = new URL(originalUrl);
                     blockedUrl.textContent = url.hostname;
+                    blockTimeRange.textContent = '終日';
                 } catch (error) {
                     blockedUrl.textContent = originalUrl;
+                    blockTimeRange.textContent = '終日';
                 }
             }
         });
     } else {
         blockedUrl.textContent = 'Unknown Site';
+        blockTimeRange.textContent = '終日';
     }
 
     // ブロック時刻を表示
@@ -188,6 +195,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function timeToMinutes(timeStr) {
         const [hours, minutes] = timeStr.split(':').map(Number);
         return hours * 60 + minutes;
+    }
+
+    // 時間帯を表示用にフォーマットする関数
+    function formatTimeRange(fromTime, toTime) {
+        if (fromTime === '00:00' && toTime === '23:59') {
+            return '終日';
+        }
+        return `${fromTime}～${toTime}`;
     }
 
     // URLを正規化する関数

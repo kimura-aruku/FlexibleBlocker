@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const notBlockedState = document.getElementById('notBlockedState');
     const alreadyBlockedState = document.getElementById('alreadyBlockedState');
     const blockCurrentSiteBtn = document.getElementById('blockCurrentSiteBtn');
+    const blockStatusMessage = document.getElementById('blockStatusMessage');
     const unblockCurrentSiteBtn = document.getElementById('unblockCurrentSiteBtn');
     const openOptionsBtn = document.getElementById('openOptionsBtn');
     const blockedSitesCount = document.getElementById('count');
@@ -300,13 +301,18 @@ document.addEventListener('DOMContentLoaded', async function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
             
-            // 現在のURLにマッチするすべてのブロックルールを見つける
+            // 現在のURLにマッチするすべてのブロックルールを見つける（時間を考慮せず）
+            const matchingSitesIgnoreTime = blockedSites.filter(blockedSite => {
+                return isUrlMatchedIgnoreTime(currentUrl, blockedSite);
+            });
+            
+            // 現在の時間でブロック対象かチェック
             const matchingSites = blockedSites.filter(blockedSite => {
                 return isUrlBlocked(currentUrl, blockedSite);
             });
             
             if (matchingSites.length > 0) {
-                // 最も具体的なルール（最も長いパス）を表示用として選択
+                // 現在時刻でブロック対象 - ブロック中状態
                 const mostSpecificRule = matchingSites.reduce((prev, current) => {
                     const prevParts = prev.url.split('/').length;
                     const currentParts = current.url.split('/').length;
@@ -323,7 +329,36 @@ document.addEventListener('DOMContentLoaded', async function() {
                 blockedRuleName.textContent = mostSpecificRule.url;
                 notBlockedState.style.display = 'none';
                 alreadyBlockedState.style.display = 'block';
+            } else if (matchingSitesIgnoreTime.length > 0) {
+                // ブロック設定はあるが現在時刻は対象外 - ボタン無効化
+                const mostSpecificRule = matchingSitesIgnoreTime.reduce((prev, current) => {
+                    const prevParts = prev.url.split('/').length;
+                    const currentParts = current.url.split('/').length;
+                    
+                    if (currentParts > prevParts) {
+                        return current;
+                    } else if (currentParts === prevParts) {
+                        return current.url.length > prev.url.length ? current : prev;
+                    } else {
+                        return prev;
+                    }
+                });
+                
+                blockCurrentSiteBtn.disabled = true;
+                blockCurrentSiteBtn.textContent = 'ブロック設定済み';
+                
+                const timeDisplay = formatTimeRange(mostSpecificRule.fromTime, mostSpecificRule.toTime);
+                blockStatusMessage.textContent = `ブロック指定済み（${timeDisplay}）`;
+                blockStatusMessage.style.display = 'block';
+                
+                notBlockedState.style.display = 'block';
+                alreadyBlockedState.style.display = 'none';
             } else {
+                // ブロック設定なし - 通常状態
+                blockCurrentSiteBtn.disabled = false;
+                blockCurrentSiteBtn.textContent = 'このサイトをブロック';
+                blockStatusMessage.style.display = 'none';
+                
                 notBlockedState.style.display = 'block';
                 alreadyBlockedState.style.display = 'none';
             }
@@ -492,5 +527,62 @@ document.addEventListener('DOMContentLoaded', async function() {
     function timeToMinutes(timeStr) {
         const [hours, minutes] = timeStr.split(':').map(Number);
         return hours * 60 + minutes;
+    }
+
+    // 時間帯を表示用にフォーマットする関数
+    function formatTimeRange(fromTime, toTime) {
+        if (fromTime === '00:00' && toTime === '23:59') {
+            return '終日';
+        }
+        return `${fromTime}～${toTime}`;
+    }
+
+    // URLが時間を考慮せずにブロック対象かチェックする関数
+    function isUrlMatchedIgnoreTime(currentUrl, siteInfo) {
+        try {
+            const url = new URL(currentUrl);
+            let hostname = url.hostname;
+            const pathname = url.pathname;
+            
+            // www. を除去
+            if (hostname.startsWith('www.')) {
+                hostname = hostname.substring(4);
+            }
+            
+            const pathParts = pathname.split('/').filter(part => part.length > 0);
+            
+            // ブロック対象のサイトを / で分割
+            const blockedParts = siteInfo.url.split('/');
+            const blockedDomain = blockedParts[0];
+            const blockedPathParts = blockedParts.slice(1);
+            
+            // 1. ドメインが一致しない場合はブロック対象外
+            if (hostname !== blockedDomain) {
+                return false;
+            }
+            
+            // 2. ドメインのみの設定の場合（パス指定なし）
+            if (blockedPathParts.length === 0) {
+                return true; // ドメインが一致すればマッチ
+            }
+            
+            // 3. パス部分の一致チェック
+            for (let i = 0; i < blockedPathParts.length; i++) {
+                if (i >= pathParts.length) {
+                    return false; // 現在のURLの方が短い
+                }
+                
+                if (pathParts[i] !== blockedPathParts[i]) {
+                    return false; // パス部分が一致しない
+                }
+            }
+            
+            // URLマッチした
+            return true;
+            
+        } catch (error) {
+            console.error('Error checking URL:', error);
+            return false;
+        }
     }
 });

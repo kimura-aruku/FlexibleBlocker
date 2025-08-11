@@ -55,12 +55,15 @@
         
         <div class="section">
             <h2>ブロック中のサイト</h2>
-            <div id="blockedSitesList" class="sites-list">
-                <!-- ブロックされたサイトがここに表示される -->
+            <div class="sites-table-container">
+                <table id="blockedSitesTable" class="sites-table">
+                    <tbody id="blockedSitesList">
+                    </tbody>
+                </table>
+                <p id="noSitesMessage" class="no-sites" style="display: none;">
+                    ブロック中のサイトはありません
+                </p>
             </div>
-            <p id="noSitesMessage" class="no-sites" style="display: none;">
-                ブロック中のサイトはありません
-            </p>
         </div>
     </div>
     

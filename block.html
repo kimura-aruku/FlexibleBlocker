@@ -120,6 +120,21 @@
             color: #999;
             margin-top: 20px;
         }
+        
+        .block-time-range {
+            font-size: 16px;
+            color: #666;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        
+        .block-time-range span {
+            font-weight: bold;
+            color: #856404;
+        }
     </style>
 </head>
 <body>
@@ -129,6 +144,10 @@
         
         <div class="blocked-site">
             <strong id="blockedUrl">読み込み中...</strong>
+        </div>
+        
+        <div class="block-time-range">
+            ブロック対象時間帯: <span id="blockTimeRange">読み込み中...</span>
         </div>
         
         
