@@ -17,17 +17,28 @@
     <div class="popup-container">
         <h2>FlexibleBlocker</h2>
         
-        <div id="currentSiteInfo">
-            <p class="current-site">現在のサイト: <span id="currentSiteName">読み込み中...</span></p>
-        </div>
-        
         <div id="notBlockedState" style="display: none;">
             <button id="blockCurrentSiteBtn" class="primary-btn">このサイトをブロック</button>
         </div>
         
         <div id="alreadyBlockedState" style="display: none;">
-            <p class="status blocked">✓ このサイトはブロック中です</p>
+            <p class="status blocked">✓ <span id="blockedRuleName">このサイト</span> はブロック中です</p>
             <button id="unblockCurrentSiteBtn" class="secondary-btn">ブロックを解除</button>
+        </div>
+        
+        <!-- URL階層選択セクション -->
+        <div id="urlAnalysisSection" class="url-analysis-section" style="display: none;">
+            <h3>ブロック範囲を選択</h3>
+            <p class="note">クリックしてブロック範囲を選択してください：</p>
+            <div id="urlParts" class="url-parts"></div>
+            <div class="selected-url-preview">
+                <strong>選択されたブロック対象:</strong>
+                <code id="selectedUrl"></code>
+            </div>
+            <div class="popup-buttons">
+                <button id="addSelectedBtn" class="primary-btn">この範囲をブロックに追加</button>
+                <button id="cancelAnalysisBtn" class="secondary-btn">キャンセル</button>
+            </div>
         </div>
         
         <hr>

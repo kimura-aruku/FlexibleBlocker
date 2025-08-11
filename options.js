@@ -1,39 +1,136 @@
 // オプションページの JavaScript
 document.addEventListener('DOMContentLoaded', function() {
     const siteInput = document.getElementById('siteInput');
-    const addSiteBtn = document.getElementById('addSiteBtn');
+    const analyzeUrlBtn = document.getElementById('analyzeUrlBtn');
+    const addSelectedBtn = document.getElementById('addSelectedBtn');
     const blockedSitesList = document.getElementById('blockedSitesList');
     const noSitesMessage = document.getElementById('noSitesMessage');
+    const urlAnalysisSection = document.getElementById('urlAnalysisSection');
+    const urlParts = document.getElementById('urlParts');
+    const selectedUrl = document.getElementById('selectedUrl');
+
+    let currentParsedUrl = null;
+    let selectedIndex = -1;
 
     // ページ読み込み時にブロックされたサイト一覧を表示
     loadBlockedSites();
 
-    // 追加ボタンのクリックイベント
-    addSiteBtn.addEventListener('click', addSite);
+    // URL解析ボタンのクリックイベント
+    analyzeUrlBtn.addEventListener('click', analyzeUrl);
     
-    // Enterキーでも追加できるようにする
+    // 選択されたURLを追加
+    addSelectedBtn.addEventListener('click', addSelectedSite);
+    
+    // Enterキーでも解析できるようにする
     siteInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            addSite();
+            analyzeUrl();
         }
     });
 
-    // サイトを追加する関数
-    async function addSite() {
-        const site = siteInput.value.trim();
+    // URLを解析する関数
+    function analyzeUrl() {
+        const url = siteInput.value.trim();
         
-        if (!site) {
-            alert('サイトのURLを入力してください');
+        if (!url) {
+            alert('URLを入力してください');
             return;
         }
 
-        // URLの正規化（http:// や www. を除去）
-        const normalizedSite = normalizeSite(site);
+        try {
+            currentParsedUrl = parseUrl(url);
+            displayUrlParts();
+            urlAnalysisSection.style.display = 'block';
+        } catch (error) {
+            console.error('URL parsing error:', error);
+            alert('有効なURLを入力してください');
+        }
+    }
+
+    // URLを解析してパーツに分割する関数
+    function parseUrl(inputUrl) {
+        let url = inputUrl;
         
-        if (!isValidDomain(normalizedSite)) {
-            alert('有効なドメイン名を入力してください');
+        // プロトコルを除去
+        url = url.replace(/^https?:\/\//, '');
+        
+        // URLの部分を / で分割
+        const parts = url.split('/').filter(part => part.length > 0);
+        
+        if (parts.length === 0) {
+            throw new Error('Invalid URL');
+        }
+
+        // 最初の部分（ドメイン）から www. を除去
+        if (parts[0].startsWith('www.')) {
+            parts[0] = parts[0].substring(4);
+        }
+
+        return parts;
+    }
+
+    // URL部分を表示する関数
+    function displayUrlParts() {
+        urlParts.innerHTML = '';
+        selectedIndex = -1;
+
+        currentParsedUrl.forEach((part, index) => {
+            const partElement = document.createElement('span');
+            partElement.className = 'url-part';
+            partElement.textContent = part;
+            partElement.dataset.index = index;
+            
+            partElement.addEventListener('click', () => selectUrlPart(index));
+            
+            urlParts.appendChild(partElement);
+            
+            // / 区切り文字を追加（最後以外）
+            if (index < currentParsedUrl.length - 1) {
+                const separator = document.createElement('span');
+                separator.className = 'url-separator';
+                separator.textContent = '/';
+                urlParts.appendChild(separator);
+            }
+        });
+
+        updateSelectedUrl();
+    }
+
+    // URL部分を選択する関数
+    function selectUrlPart(index) {
+        selectedIndex = index;
+        
+        // 全ての部分のスタイルをリセット
+        document.querySelectorAll('.url-part').forEach((element, i) => {
+            if (i <= index) {
+                element.classList.add('selected');
+            } else {
+                element.classList.remove('selected');
+            }
+        });
+
+        updateSelectedUrl();
+    }
+
+    // 選択されたURLを更新する関数
+    function updateSelectedUrl() {
+        if (selectedIndex >= 0 && currentParsedUrl) {
+            const selectedParts = currentParsedUrl.slice(0, selectedIndex + 1);
+            selectedUrl.textContent = selectedParts.join('/');
+        } else {
+            selectedUrl.textContent = '';
+        }
+    }
+
+    // 選択されたサイトを追加する関数
+    async function addSelectedSite() {
+        if (selectedIndex < 0 || !currentParsedUrl) {
+            alert('ブロック範囲を選択してください');
             return;
         }
+
+        const selectedParts = currentParsedUrl.slice(0, selectedIndex + 1);
+        const siteToAdd = selectedParts.join('/');
 
         try {
             // 既存のブロックリストを取得
@@ -41,20 +138,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const blockedSites = result.blockedSites || [];
 
             // 重複チェック
-            if (blockedSites.includes(normalizedSite)) {
+            if (blockedSites.includes(siteToAdd)) {
                 alert('このサイトは既にブロックされています');
                 return;
             }
 
             // 新しいサイトを追加
-            blockedSites.push(normalizedSite);
+            blockedSites.push(siteToAdd);
             await chrome.storage.local.set({ blockedSites });
 
-            // 入力フィールドをクリア
+            // 入力フィールドとセクションをクリア
             siteInput.value = '';
+            urlAnalysisSection.style.display = 'none';
+            currentParsedUrl = null;
+            selectedIndex = -1;
 
             // リストを再読み込み
             loadBlockedSites();
+            
+            alert('ブロック対象に追加しました: ' + siteToAdd);
             
         } catch (error) {
             console.error('Error adding site:', error);
@@ -123,26 +225,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // URLを正規化する関数
-    function normalizeSite(input) {
-        let site = input.toLowerCase();
-        
-        // http:// や https:// を除去
-        site = site.replace(/^https?:\/\//, '');
-        
-        // www. を除去
-        site = site.replace(/^www\./, '');
-        
-        // パス部分を除去
-        site = site.split('/')[0];
-        
-        return site;
-    }
-
-    // ドメイン名の妥当性をチェックする関数
-    function isValidDomain(domain) {
-        // 簡単なドメイン名の正規表現チェック
-        const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.([a-zA-Z]{2,}|[a-zA-Z]{2,}\.[a-zA-Z]{2,})$/;
-        return domainRegex.test(domain) || domain === 'localhost';
-    }
 });

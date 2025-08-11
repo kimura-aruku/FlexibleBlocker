@@ -13,10 +13,32 @@
         <div class="section">
             <h2>新しいサイトをブロック</h2>
             <div class="input-group">
-                <input type="text" id="siteInput" placeholder="例: example.com" />
-                <button id="addSiteBtn">追加</button>
+                <input type="text" id="siteInput" placeholder="ブロックしたいサイトのURLを入力" />
+                <button id="analyzeUrlBtn">URL解析</button>
             </div>
-            <p class="note">※ ドメイン名のみを入力してください（http://やwww.は不要）</p>
+            
+            <!-- URL階層選択セクション -->
+            <div id="urlAnalysisSection" class="url-analysis-section" style="display: none;">
+                <h3>ブロック範囲を選択</h3>
+                <p class="note">クリックしてブロック範囲を選択してください：</p>
+                <div id="urlParts" class="url-parts"></div>
+                <div class="selected-url-preview">
+                    <strong>選択されたブロック対象:</strong>
+                    <code id="selectedUrl"></code>
+                </div>
+                <button id="addSelectedBtn" class="primary-btn">この範囲をブロックに追加</button>
+            </div>
+            
+            <div class="help-section">
+                <h3>使用方法</h3>
+                <ol class="help-list">
+                    <li>ブロックしたいサイトの完全なURLを上の入力欄に貼り付け</li>
+                    <li>「URL解析」ボタンをクリック</li>
+                    <li>表示されるURL部分から、ブロックしたい範囲をクリック</li>
+                    <li>「この範囲をブロックに追加」をクリック</li>
+                </ol>
+                <p class="note">例: プライムビデオのみブロックしたい場合は「video」部分をクリック</p>
+            </div>
         </div>
         
         <div class="section">

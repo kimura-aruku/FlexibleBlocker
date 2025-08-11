@@ -169,6 +169,159 @@ button, .btn {
     margin-top: 4px;
 }
 
+/* ヘルプセクション */
+.help-section {
+    margin-top: 16px;
+    padding: 16px;
+    background: white;
+    border: 1px solid #e1e1e1;
+    border-radius: 6px;
+}
+
+.help-section h3 {
+    font-size: 16px;
+    color: #2c3e50;
+    margin: 0 0 12px 0;
+}
+
+.help-list {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.help-list li {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #555;
+}
+
+.help-list code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    color: #d63384;
+}
+
+/* URL解析セクション */
+.url-analysis-section {
+    margin-top: 16px;
+    padding: 16px;
+    background: white;
+    border: 1px solid #e1e1e1;
+    border-radius: 6px;
+}
+
+.url-analysis-section h3 {
+    font-size: 16px;
+    color: #2c3e50;
+    margin: 0 0 12px 0;
+}
+
+/* URL部分表示 */
+.url-parts {
+    margin: 12px 0;
+    padding: 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-x: auto;
+}
+
+.url-part {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 2px;
+    background: #ffffff;
+    border: 2px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #495057;
+}
+
+.url-part:hover {
+    border-color: #3498db;
+    background: #e3f2fd;
+}
+
+.url-part.selected {
+    border-color: #3498db;
+    background: #3498db;
+    color: white;
+}
+
+.url-separator {
+    display: inline-block;
+    margin: 0 4px;
+    color: #6c757d;
+    font-weight: bold;
+}
+
+/* 選択されたURLプレビュー */
+.selected-url-preview {
+    margin: 16px 0;
+    padding: 12px;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+}
+
+.selected-url-preview strong {
+    color: #155724;
+    font-size: 14px;
+}
+
+.selected-url-preview code {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #155724;
+    color: white;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+}
+
+/* プライマリボタンのスタイル調整 */
+.primary-btn {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+    background-color: #2980b9;
+}
+
+.primary-btn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+/* ポップアップ用ボタングループ */
+.popup-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.popup-buttons button {
+    flex: 1;
+    font-size: 12px;
+    padding: 8px 12px;
+}
+
 /* ポップアップ専用スタイル */
 .current-site {
     font-size: 13px;
@@ -192,6 +345,17 @@ button, .btn {
     background: #d4edda;
     color: #155724;
     border: 1px solid #c3e6cb;
+}
+
+/* ブロック対象URL名のスタイル */
+#blockedRuleName {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-weight: bold;
+    background: #155724;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
 }
 
 .actions {
