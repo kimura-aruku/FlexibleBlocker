@@ -90,9 +90,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
             
-            // 現在のURLにマッチするすべてのブロックルールを見つける
+            // 現在のURLにマッチするすべてのブロックルールを見つける（時間を考慮せず）
             const matchingSites = blockedSites.filter(blockedSite => {
-                return isUrlBlocked(currentUrl, blockedSite);
+                return isUrlMatchedIgnoreTime(currentUrl, blockedSite);
             });
             
             if (matchingSites.length === 0) {
@@ -203,6 +203,55 @@ document.addEventListener('DOMContentLoaded', function() {
             return '終日';
         }
         return `${fromTime}～${toTime}`;
+    }
+
+    // URLが時間を考慮せずにブロック対象かチェックする関数
+    function isUrlMatchedIgnoreTime(currentUrl, siteInfo) {
+        try {
+            const url = new URL(currentUrl);
+            let hostname = url.hostname;
+            const pathname = url.pathname;
+            
+            // www. を除去
+            if (hostname.startsWith('www.')) {
+                hostname = hostname.substring(4);
+            }
+            
+            const pathParts = pathname.split('/').filter(part => part.length > 0);
+            
+            // ブロック対象のサイトを / で分割
+            const blockedParts = siteInfo.url.split('/');
+            const blockedDomain = blockedParts[0];
+            const blockedPathParts = blockedParts.slice(1);
+            
+            // 1. ドメインが一致しない場合はブロック対象外
+            if (hostname !== blockedDomain) {
+                return false;
+            }
+            
+            // 2. ドメインのみの設定の場合（パス指定なし）
+            if (blockedPathParts.length === 0) {
+                return true; // ドメインが一致すればマッチ
+            }
+            
+            // 3. パス部分の一致チェック
+            for (let i = 0; i < blockedPathParts.length; i++) {
+                if (i >= pathParts.length) {
+                    return false; // 現在のURLの方が短い
+                }
+                
+                if (pathParts[i] !== blockedPathParts[i]) {
+                    return false; // パス部分が一致しない
+                }
+            }
+            
+            // URLマッチした
+            return true;
+            
+        } catch (error) {
+            console.error('Error checking URL:', error);
+            return false;
+        }
     }
 
     // URLを正規化する関数

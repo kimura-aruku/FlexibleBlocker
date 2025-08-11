@@ -1,9 +1,7 @@
 // ポップアップの JavaScript
 document.addEventListener('DOMContentLoaded', async function() {
     const notBlockedState = document.getElementById('notBlockedState');
-    const alreadyBlockedState = document.getElementById('alreadyBlockedState');
     const blockCurrentSiteBtn = document.getElementById('blockCurrentSiteBtn');
-    const unblockCurrentSiteBtn = document.getElementById('unblockCurrentSiteBtn');
     const openOptionsBtn = document.getElementById('openOptionsBtn');
     const blockedSitesCount = document.getElementById('count');
     const urlAnalysisSection = document.getElementById('urlAnalysisSection');
@@ -11,7 +9,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const selectedUrl = document.getElementById('selectedUrl');
     const addSelectedBtn = document.getElementById('addSelectedBtn');
     const cancelAnalysisBtn = document.getElementById('cancelAnalysisBtn');
-    const blockedRuleName = document.getElementById('blockedRuleName');
     const simpleFromTime = document.getElementById('simpleFromTime');
     const simpleToTime = document.getElementById('simpleToTime');
 
@@ -48,10 +45,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         analyzeCurrentUrl();
     });
 
-    // ブロック解除ボタンのクリックイベント
-    unblockCurrentSiteBtn.addEventListener('click', async function() {
-        await removeCurrentSiteFromBlocklist();
-    });
 
     // 選択されたURLを追加
     addSelectedBtn.addEventListener('click', addSelectedSite);
@@ -313,31 +306,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return isUrlMatchedIgnoreTime(currentUrl, blockedSite);
             });
             
-            // 現在の時間でブロック対象かチェック
-            const matchingSites = blockedSites.filter(blockedSite => {
-                return isUrlBlocked(currentUrl, blockedSite);
-            });
-            
-            if (matchingSites.length > 0) {
-                // 現在時刻でブロック対象 - ブロック中状態
-                const mostSpecificRule = matchingSites.reduce((prev, current) => {
-                    const prevParts = prev.url.split('/').length;
-                    const currentParts = current.url.split('/').length;
-                    
-                    if (currentParts > prevParts) {
-                        return current;
-                    } else if (currentParts === prevParts) {
-                        return current.url.length > prev.url.length ? current : prev;
-                    } else {
-                        return prev;
-                    }
-                });
-                
-                blockedRuleName.textContent = mostSpecificRule.url;
-                notBlockedState.style.display = 'none';
-                alreadyBlockedState.style.display = 'block';
-            } else if (matchingSitesIgnoreTime.length > 0) {
-                // ブロック設定はあるが現在時刻は対象外 - ボタン無効化
+            if (matchingSitesIgnoreTime.length > 0) {
+                // ブロック設定済み - ボタン無効化して設定済み時間を表示
                 const mostSpecificRule = matchingSitesIgnoreTime.reduce((prev, current) => {
                     const prevParts = prev.url.split('/').length;
                     const currentParts = current.url.split('/').length;
@@ -359,10 +329,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 simpleToTime.value = mostSpecificRule.toTime;
                 simpleFromTime.disabled = true;
                 simpleToTime.disabled = true;
-                
-                
-                notBlockedState.style.display = 'block';
-                alreadyBlockedState.style.display = 'none';
             } else {
                 // ブロック設定なし - 通常状態
                 blockCurrentSiteBtn.disabled = false;
@@ -371,10 +337,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 // 時間入力フィールドを有効化
                 simpleFromTime.disabled = false;
                 simpleToTime.disabled = false;
-                
-                notBlockedState.style.display = 'block';
-                alreadyBlockedState.style.display = 'none';
             }
+            
+            notBlockedState.style.display = 'block';
         } catch (error) {
             console.error('Error checking block status:', error);
         }
@@ -440,52 +405,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // 現在のサイトをブロックリストから削除する関数
-    async function removeCurrentSiteFromBlocklist() {
-        try {
-            if (!currentUrl) return;
-            
-            const result = await chrome.storage.local.get(['blockedSites']);
-            const blockedSites = result.blockedSites || [];
-
-            // 現在のURLにマッチするすべてのブロックルールを見つける
-            const matchingSites = blockedSites.filter(blockedSite => {
-                return isUrlBlocked(currentUrl, blockedSite);
-            });
-
-            if (matchingSites.length === 0) {
-                showMessage('ブロック対象が見つかりませんでした', 'error');
-                return;
-            }
-
-            // 最も具体的なルール（最も長いパス）を優先して削除
-            // パス数で比較し、同じ場合は文字列長で比較
-            const mostSpecificSite = matchingSites.reduce((prev, current) => {
-                const prevParts = prev.url.split('/').length;
-                const currentParts = current.url.split('/').length;
-                
-                if (currentParts > prevParts) {
-                    return current;
-                } else if (currentParts === prevParts) {
-                    return current.url.length > prev.url.length ? current : prev;
-                } else {
-                    return prev;
-                }
-            });
-
-            const updatedSites = blockedSites.filter(site => site.url !== mostSpecificSite.url);
-            await chrome.storage.local.set({ blockedSites: updatedSites });
-            
-            await updateBlockStatus();
-            await updateBlockedSitesCount();
-            
-            showMessage(`${mostSpecificSite.url} のブロックを解除しました`);
-            
-        } catch (error) {
-            console.error('Error removing site from blocklist:', error);
-            showMessage('エラーが発生しました', 'error');
-        }
-    }
 
     // 一時的なメッセージを表示する関数
     function showMessage(message, type = 'success') {
