@@ -250,17 +250,30 @@ document.addEventListener('DOMContentLoaded', function() {
     function createSiteTableRow(siteInfo) {
         const tr = document.createElement('tr');
         
-        // 時間帯表示の決定
-        const timeDisplay = formatTimeRange(siteInfo.fromTime, siteInfo.toTime);
         const url = typeof siteInfo === 'string' ? siteInfo : siteInfo.url;
+        const fromTime = siteInfo.fromTime || '00:00';
+        const toTime = siteInfo.toTime || '23:59';
         
         tr.innerHTML = `
             <td class="url-cell">${url}</td>
-            <td class="time-cell">${timeDisplay}</td>
+            <td class="time-cell">
+                <div class="time-edit-container">
+                    <input type="time" class="time-from-input" value="${fromTime}" data-site="${url}">
+                    <span class="time-separator">～</span>
+                    <input type="time" class="time-to-input" value="${toTime}" data-site="${url}">
+                </div>
+            </td>
             <td class="action-cell">
                 <button class="remove-btn" data-site="${url}">削除</button>
             </td>
         `;
+
+        // 時間変更のイベントリスナー
+        const fromInput = tr.querySelector('.time-from-input');
+        const toInput = tr.querySelector('.time-to-input');
+        
+        fromInput.addEventListener('change', () => updateSiteTime(url, fromInput.value, toInput.value));
+        toInput.addEventListener('change', () => updateSiteTime(url, fromInput.value, toInput.value));
 
         // 削除ボタンのイベントリスナー
         const removeBtn = tr.querySelector('.remove-btn');
@@ -275,6 +288,34 @@ document.addEventListener('DOMContentLoaded', function() {
             return '終日';
         }
         return `${fromTime}～${toTime}`;
+    }
+
+    // サイトの時間帯を更新する関数
+    async function updateSiteTime(siteUrl, newFromTime, newToTime) {
+        try {
+            const result = await chrome.storage.local.get(['blockedSites']);
+            const blockedSites = result.blockedSites || [];
+            
+            // 該当サイトを見つけて時間帯を更新
+            const updatedSites = blockedSites.map(site => {
+                const url = typeof site === 'string' ? site : site.url;
+                if (url === siteUrl) {
+                    return {
+                        url: siteUrl,
+                        fromTime: newFromTime,
+                        toTime: newToTime
+                    };
+                }
+                return site;
+            });
+            
+            await chrome.storage.local.set({ blockedSites: updatedSites });
+            console.log(`Updated time range for ${siteUrl}: ${newFromTime}-${newToTime}`);
+            
+        } catch (error) {
+            console.error('Error updating site time:', error);
+            alert('時間帯の更新に失敗しました');
+        }
     }
 
     // サイトを削除する関数

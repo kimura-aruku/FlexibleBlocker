@@ -333,7 +333,7 @@ button, .btn {
 
 .time-input-group input[type="time"] {
     flex: 1;
-    max-width: 120px;
+    max-width: 100px;
 }
 
 .time-note {
@@ -479,12 +479,41 @@ button, .btn {
 .sites-table .time-cell {
     color: #666;
     white-space: nowrap;
-    min-width: 100px;
+    min-width: 220px;
+    width: 220px;
 }
 
 .sites-table .action-cell {
     white-space: nowrap;
     width: 80px;
+}
+
+.time-edit-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: center;
+}
+
+.time-from-input, .time-to-input {
+    width: 100px;
+    padding: 4px 6px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 12px;
+    background: white;
+}
+
+.time-from-input:focus, .time-to-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.time-separator {
+    color: #666;
+    font-weight: bold;
+    margin: 0 2px;
 }
 
 /* レスポンシブデザイン */
