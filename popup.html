@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlexibleBlocker</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            width: 320px;
+            padding: 16px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="popup-container">
+        <h2>FlexibleBlocker</h2>
+        
+        <div id="currentSiteInfo">
+            <p class="current-site">現在のサイト: <span id="currentSiteName">読み込み中...</span></p>
+        </div>
+        
+        <div id="notBlockedState" style="display: none;">
+            <button id="blockCurrentSiteBtn" class="primary-btn">このサイトをブロック</button>
+        </div>
+        
+        <div id="alreadyBlockedState" style="display: none;">
+            <p class="status blocked">✓ このサイトはブロック中です</p>
+            <button id="unblockCurrentSiteBtn" class="secondary-btn">ブロックを解除</button>
+        </div>
+        
+        <hr>
+        
+        <div class="actions">
+            <button id="openOptionsBtn" class="secondary-btn">設定画面を開く</button>
+        </div>
+        
+        <div id="blockedSitesCount" class="stats">
+            ブロック中のサイト: <span id="count">0</span>個
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

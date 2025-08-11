@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlexibleBlocker 設定</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>FlexibleBlocker 設定</h1>
+        
+        <div class="section">
+            <h2>新しいサイトをブロック</h2>
+            <div class="input-group">
+                <input type="text" id="siteInput" placeholder="例: example.com" />
+                <button id="addSiteBtn">追加</button>
+            </div>
+            <p class="note">※ ドメイン名のみを入力してください（http://やwww.は不要）</p>
+        </div>
+        
+        <div class="section">
+            <h2>ブロック中のサイト</h2>
+            <div id="blockedSitesList" class="sites-list">
+                <!-- ブロックされたサイトがここに表示される -->
+            </div>
+            <p id="noSitesMessage" class="no-sites" style="display: none;">
+                ブロック中のサイトはありません
+            </p>
+        </div>
+    </div>
+    
+    <script src="options.js"></script>
+</body>
+</html>

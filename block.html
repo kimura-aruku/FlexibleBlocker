@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サイトがブロックされています - FlexibleBlocker</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .block-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+            margin: 20px;
+        }
+        
+        .block-icon {
+            font-size: 64px;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+        
+        .block-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        .blocked-site {
+            font-size: 16px;
+            color: #666;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 20px 0;
+            word-break: break-all;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .block-message {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+        
+        .actions {
+            margin-top: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .settings-link {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .settings-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .settings-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .time-info {
+            font-size: 14px;
+            color: #999;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="block-container">
+        <div class="block-icon">🚫</div>
+        <h1 class="block-title">このサイトはブロック中です</h1>
+        
+        <div class="blocked-site">
+            <strong id="blockedUrl">読み込み中...</strong>
+        </div>
+        
+        <div class="block-message">
+            このサイトはFlexibleBlockerによってブロックされています。<br>
+            アクセスを許可するには、拡張機能の設定でブロックを解除してください。
+        </div>
+        
+        <div class="actions">
+            <button id="goBackBtn" class="btn btn-secondary">戻る</button>
+            <button id="openSettingsBtn" class="btn btn-primary">設定を開く</button>
+        </div>
+        
+        <div class="settings-link">
+            <a href="#" id="unblockBtn">このサイトのブロックを解除</a>
+        </div>
+        
+        <div class="time-info">
+            ブロック時刻: <span id="blockTime"></span>
+        </div>
+    </div>
+    
+    <script src="block.js"></script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+/* FlexibleBlocker 共通スタイル */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    line-height: 1.6;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    min-height: 100vh;
+}
+
+.popup-container {
+    background: white;
+}
+
+h1, h2 {
+    color: #2c3e50;
+    margin-bottom: 16px;
+}
+
+h1 {
+    font-size: 28px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+h2 {
+    font-size: 20px;
+    margin-top: 24px;
+}
+
+/* セクション */
+.section {
+    margin-bottom: 32px;
+    padding: 20px;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+/* 入力フォーム */
+.input-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+input[type="text"] {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+/* ボタン */
+button, .btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
+}
+
+.primary-btn, .btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.primary-btn:hover, .btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.secondary-btn, .btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.secondary-btn:hover, .btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+#addSiteBtn {
+    background-color: #27ae60;
+    color: white;
+    white-space: nowrap;
+}
+
+#addSiteBtn:hover {
+    background-color: #219a52;
+}
+
+/* サイト一覧 */
+.sites-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+}
+
+.site-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.site-item:last-child {
+    border-bottom: none;
+}
+
+.site-item:hover {
+    background-color: #f8f9fa;
+}
+
+.site-name {
+    flex: 1;
+    font-size: 14px;
+    color: #2c3e50;
+}
+
+.remove-btn {
+    background-color: #e74c3c;
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 3px;
+}
+
+.remove-btn:hover {
+    background-color: #c0392b;
+}
+
+.no-sites {
+    text-align: center;
+    padding: 40px 20px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+/* ノート・説明文 */
+.note {
+    font-size: 13px;
+    color: #7f8c8d;
+    margin-top: 4px;
+}
+
+/* ポップアップ専用スタイル */
+.current-site {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 16px;
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid #3498db;
+}
+
+.status {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.status.blocked {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.actions {
+    border-top: 1px solid #eee;
+    padding-top: 16px;
+    margin-top: 16px;
+}
+
+.stats {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 600px) {
+    .container {
+        padding: 16px;
+    }
+    
+    .input-group {
+        flex-direction: column;
+    }
+    
+    .input-group button {
+        margin-top: 8px;
+    }
+    
+    .site-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .remove-btn {
+        align-self: flex-end;
+    }
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.site-item {
+    animation: fadeIn 0.3s ease;
+}
+
+/* フォーカス表示の改善 */
+button:focus, .btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.4);
+}
+
+/* エラー・成功メッセージ */
+.message {
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
