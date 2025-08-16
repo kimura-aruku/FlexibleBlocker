@@ -250,6 +250,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await chrome.storage.local.get(['blockedSites']);
             const blockedSites = result.blockedSites || [];
             const sitesTable = document.getElementById('blockedSitesTable');
+            const blockedSitesCountElement = document.getElementById('blockedSitesCount');
+
+            // ブロック中のサイト数を更新
+            blockedSitesCountElement.textContent = blockedSites.length;
 
             if (blockedSites.length === 0) {
                 blockedSitesList.innerHTML = '';

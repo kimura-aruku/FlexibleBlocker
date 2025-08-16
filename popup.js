@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const notBlockedState = document.getElementById('notBlockedState');
     const blockCurrentSiteBtn = document.getElementById('blockCurrentSiteBtn');
     const openOptionsBtn = document.getElementById('openOptionsBtn');
-    const blockedSitesCount = document.getElementById('count');
     const urlAnalysisSection = document.getElementById('urlAnalysisSection');
     const urlParts = document.getElementById('urlParts');
     const selectedUrl = document.getElementById('selectedUrl');
@@ -37,8 +36,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.error('Error getting current tab:', error);
     }
 
-    // ブロック中のサイト数を表示
-    await updateBlockedSitesCount();
 
     // ブロックボタンのクリックイベント（URL解析処理に変更）
     blockCurrentSiteBtn.addEventListener('click', function() {
@@ -117,8 +114,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             blockedSites.push(siteInfo);
             await chrome.storage.local.set({ blockedSites });
 
-            // ブロック中のサイト数を更新
-            await updateBlockedSitesCount();
             await updateBlockStatus();
             
             // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
@@ -283,8 +278,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             currentParsedUrl = null;
             selectedIndex = -1;
 
-            // ブロック中のサイト数を更新
-            await updateBlockedSitesCount();
             await updateBlockStatus();
             
             // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
@@ -364,16 +357,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // ブロック中のサイト数を更新する関数
-    async function updateBlockedSitesCount() {
-        try {
-            const result = await chrome.storage.local.get(['blockedSites']);
-            const blockedSites = result.blockedSites || [];
-            blockedSitesCount.textContent = blockedSites.length;
-        } catch (error) {
-            console.error('Error updating count:', error);
-        }
-    }
 
     // URLブロック判定関数（background.jsと同じロジック）
     function isUrlBlocked(currentUrl, siteInfo) {
