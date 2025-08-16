@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Chrome拡張ページなど特殊なページの場合
             if (url.protocol === 'chrome:' || url.protocol === 'chrome-extension:') {
                 notBlockedState.style.display = 'none';
-                alreadyBlockedState.style.display = 'none';
             } else {
                 await updateBlockStatus();
             }
