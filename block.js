@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const blockTimeRange = document.getElementById('blockTimeRange');
     const openSettingsBtn = document.getElementById('openSettingsBtn');
     const unblockBtn = document.getElementById('unblockBtn');
-    const blockTime = document.getElementById('blockTime');
 
     // URLパラメータから元のURLを取得
     const urlParams = new URLSearchParams(window.location.search);
@@ -36,9 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
         blockTimeRange.textContent = '終日';
     }
 
-    // ブロック時刻を表示
-    const now = new Date();
-    blockTime.textContent = now.toLocaleString('ja-JP');
 
     // 設定を開くボタンのクリックイベント
     openSettingsBtn.addEventListener('click', function() {
