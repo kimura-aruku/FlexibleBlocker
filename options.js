@@ -270,9 +270,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 const siteElement = createSiteTableRow(site);
                 blockedSitesList.appendChild(siteElement);
             });
+
+            // ツールチップの位置設定
+            setupTooltips();
         } catch (error) {
             console.error('Error loading blocked sites:', error);
         }
+    }
+
+    // ツールチップの位置設定関数
+    function setupTooltips() {
+        const urlCells = document.querySelectorAll('.url-cell');
+        
+        urlCells.forEach(cell => {
+            const tooltip = cell.querySelector('.url-tooltip');
+            if (!tooltip) return;
+
+            cell.addEventListener('mouseenter', function(e) {
+                const rect = cell.getBoundingClientRect();
+                tooltip.style.left = rect.left + 'px';
+                tooltip.style.top = (rect.top - 10) + 'px';
+                tooltip.style.transform = 'translateY(-100%)';
+            });
+        });
     }
 
     // サイトテーブル行を作成する関数
@@ -284,7 +304,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const toTime = siteInfo.toTime || '23:59';
         
         tr.innerHTML = `
-            <td class="url-cell">${url}</td>
+            <td class="url-cell">
+                ${url}
+                <div class="url-tooltip">${url}</div>
+            </td>
             <td class="time-cell">
                 <div class="time-edit-container">
                     <input type="time" class="time-from-input" value="${fromTime}" data-site="${url}">
