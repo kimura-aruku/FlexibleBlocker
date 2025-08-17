@@ -490,7 +490,7 @@ button, .btn {
 
 .url-tooltip {
     position: fixed;
-    background: #333;
+    background: #2c3e50;
     color: white;
     padding: 8px 12px;
     border-radius: 4px;
@@ -513,7 +513,7 @@ button, .btn {
     top: 100%;
     left: 12px;
     border: 5px solid transparent;
-    border-top-color: #333;
+    border-top-color: #2c3e50;
 }
 
 .url-cell:hover .url-tooltip {
