@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             
             // 複数パートがある場合のみ選択画面を表示
-            displayUrlParts();
+            displayUrlPartsLocal();
             // ボタンのみ非表示にして時間帯入力は表示したまま
             blockCurrentSiteBtn.style.display = 'none';
             urlAnalysisSection.style.display = 'block';
@@ -140,121 +140,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // URLを解析してパーツに分割する関数
-    function parseUrl(inputUrl) {
-        let url = inputUrl;
-        
-        // プロトコルを除去
-        url = url.replace(/^https?:\/\//, '');
-        
-        // URLの部分を / で分割
-        const parts = url.split('/').filter(part => part.length > 0);
-        
-        if (parts.length === 0) {
-            throw new Error('Invalid URL');
-        }
-
-        // 最初の部分（ドメイン）から www. を除去
-        if (parts[0].startsWith('www.')) {
-            parts[0] = parts[0].substring(4);
-        }
-
-        return parts;
-    }
 
     // URL部分を表示する関数
-    function displayUrlParts() {
-        urlParts.innerHTML = '';
-        selectedIndex = -1;
-        
-        // 注意メッセージを赤色にする（初期状態）
-        const noteElement = document.querySelector('#urlAnalysisSection .note');
-        noteElement.classList.add('warning');
-
-        currentParsedUrl.forEach((part, index) => {
-            const partElement = document.createElement('span');
-            partElement.className = 'url-part';
-            partElement.textContent = part;
-            partElement.dataset.index = index;
-            
-            partElement.addEventListener('click', () => selectUrlPart(index));
-            
-            urlParts.appendChild(partElement);
-            
-            // / 区切り文字を追加（最後以外）
-            if (index < currentParsedUrl.length - 1) {
-                const separator = document.createElement('span');
-                separator.className = 'url-separator';
-                separator.textContent = '/';
-                urlParts.appendChild(separator);
-            }
-        });
-
-        updateSelectedUrl();
-    }
-
-    // URL部分を選択する関数
-    function selectUrlPart(index) {
-        // 既に選択されている部分をクリックした場合は、その部分より前まで選択
-        if (selectedIndex === index) {
-            if (index === 0) {
-                // 最初の部分をクリックした場合は全て非選択
-                selectedIndex = -1;
-                
-                // 注意メッセージの赤色を復活
-                const noteElement = document.querySelector('#urlAnalysisSection .note');
-                noteElement.classList.add('warning');
-                
-                // 全ての部分の選択を解除
-                document.querySelectorAll('.url-part').forEach(element => {
-                    element.classList.remove('selected');
-                });
-            } else {
-                // 前の部分まで選択状態にする
-                selectedIndex = index - 1;
-                
-                // 全ての部分のスタイルをリセット
-                document.querySelectorAll('.url-part').forEach((element, i) => {
-                    if (i <= selectedIndex) {
-                        element.classList.add('selected');
-                    } else {
-                        element.classList.remove('selected');
-                    }
-                });
-            }
-        } else {
-            selectedIndex = index;
-            
-            // 選択されたので注意メッセージの赤色を解除
-            const noteElement = document.querySelector('#urlAnalysisSection .note');
-            noteElement.classList.remove('warning');
-            
-            // 全ての部分のスタイルをリセット
-            document.querySelectorAll('.url-part').forEach((element, i) => {
-                if (i <= index) {
-                    element.classList.add('selected');
-                } else {
-                    element.classList.remove('selected');
-                }
-            });
-        }
-
-        updateSelectedUrl();
+    function displayUrlPartsLocal() {
+        window.selectedIndex = -1;
+        displayUrlParts(urlParts, currentParsedUrl, updateSelectedUrlLocal);
     }
 
     // 選択されたURLを更新する関数
-    function updateSelectedUrl() {
-        if (selectedIndex >= 0 && currentParsedUrl) {
-            const selectedParts = currentParsedUrl.slice(0, selectedIndex + 1);
-            selectedUrl.textContent = selectedParts.join('/');
-        } else {
-            selectedUrl.textContent = '';
-        }
+    function updateSelectedUrlLocal() {
+        updateSelectedUrl(selectedUrl, currentParsedUrl);
     }
 
     // 選択されたサイトを追加する関数
     async function addSelectedSite() {
-        if (selectedIndex < 0 || !currentParsedUrl) {
+        if (window.selectedIndex < 0 || !currentParsedUrl) {
             // すべてのURLパーツを揺らす
             document.querySelectorAll('.url-part').forEach(part => {
                 part.classList.add('shake');
@@ -270,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
         }
 
-        const selectedParts = currentParsedUrl.slice(0, selectedIndex + 1);
+        const selectedParts = currentParsedUrl.slice(0, window.selectedIndex + 1);
         const siteToAdd = selectedParts.join('/');
 
         try {
@@ -386,56 +286,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
 
-    // URLブロック判定関数（background.jsと同じロジック）
-    function isUrlBlocked(currentUrl, siteInfo) {
-        try {
-            const url = new URL(currentUrl);
-            let hostname = url.hostname;
-            const pathname = url.pathname;
-            
-            // www. を除去
-            if (hostname.startsWith('www.')) {
-                hostname = hostname.substring(4);
-            }
-            
-            const pathParts = pathname.split('/').filter(part => part.length > 0);
-            
-            // ブロック対象のサイトを / で分割
-            const blockedParts = siteInfo.url.split('/');
-            const blockedDomain = blockedParts[0];
-            const blockedPathParts = blockedParts.slice(1);
-            
-            // 1. ドメインが一致しない場合はブロック対象外
-            if (hostname !== blockedDomain) {
-                return false;
-            }
-            
-            // 2. ドメインのみの設定の場合（パス指定なし）
-            if (blockedPathParts.length === 0) {
-                return true; // ドメインが一致すればブロック
-            }
-            
-            // 3. パス部分の一致チェック
-            for (let i = 0; i < blockedPathParts.length; i++) {
-                if (i >= pathParts.length) {
-                    return false; // 現在のURLの方が短い
-                }
-                
-                if (pathParts[i] !== blockedPathParts[i]) {
-                    return false; // パス部分が一致しない
-                }
-            }
-            
-            // URLマッチした場合、時間帯をチェック
-            return isCurrentTimeBlocked(siteInfo.fromTime, siteInfo.toTime);
-            
-        } catch (error) {
-            console.error('Error checking URL:', error);
-            return false;
-        }
-    }
-
-
     // 一時的なメッセージを表示する関数
     function showMessage(message, type = 'success') {
         const messageDiv = document.createElement('div');
@@ -460,91 +310,5 @@ document.addEventListener('DOMContentLoaded', async function() {
         setTimeout(() => {
             messageDiv.remove();
         }, 2000);
-    }
-
-    // 現在時刻がブロック時間帯に含まれるかをチェックする関数
-    function isCurrentTimeBlocked(fromTime, toTime) {
-        if (fromTime === '00:00' && toTime === '23:59') {
-            return true; // 終日ブロック
-        }
-        
-        const now = new Date();
-        const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        
-        // 時間を分に変換して比較
-        const currentMinutes = timeToMinutes(currentTime);
-        const fromMinutes = timeToMinutes(fromTime);
-        const toMinutes = timeToMinutes(toTime);
-        
-        if (fromMinutes <= toMinutes) {
-            // 通常の場合（例: 09:00-17:00）
-            return currentMinutes >= fromMinutes && currentMinutes <= toMinutes;
-        } else {
-            // 日をまたぐ場合（例: 22:00-06:00）
-            return currentMinutes >= fromMinutes || currentMinutes <= toMinutes;
-        }
-    }
-    
-    // HH:MM形式の時間を分に変換する関数
-    function timeToMinutes(timeStr) {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return hours * 60 + minutes;
-    }
-
-    // 時間帯を表示用にフォーマットする関数
-    function formatTimeRange(fromTime, toTime) {
-        if (fromTime === '00:00' && toTime === '23:59') {
-            return '終日';
-        }
-        return `${fromTime}～${toTime}`;
-    }
-
-    // URLが時間を考慮せずにブロック対象かチェックする関数
-    function isUrlMatchedIgnoreTime(currentUrl, siteInfo) {
-        try {
-            const url = new URL(currentUrl);
-            let hostname = url.hostname;
-            const pathname = url.pathname;
-            
-            // www. を除去
-            if (hostname.startsWith('www.')) {
-                hostname = hostname.substring(4);
-            }
-            
-            const pathParts = pathname.split('/').filter(part => part.length > 0);
-            
-            // ブロック対象のサイトを / で分割
-            const blockedParts = siteInfo.url.split('/');
-            const blockedDomain = blockedParts[0];
-            const blockedPathParts = blockedParts.slice(1);
-            
-            // 1. ドメインが一致しない場合はブロック対象外
-            if (hostname !== blockedDomain) {
-                return false;
-            }
-            
-            // 2. ドメインのみの設定の場合（パス指定なし）
-            if (blockedPathParts.length === 0) {
-                return true; // ドメインが一致すればマッチ
-            }
-            
-            // 3. パス部分の一致チェック
-            for (let i = 0; i < blockedPathParts.length; i++) {
-                if (i >= pathParts.length) {
-                    return false; // 現在のURLの方が短い
-                }
-                
-                if (pathParts[i] !== blockedPathParts[i]) {
-                    return false; // パス部分が一致しない
-                }
-            }
-            
-            // URLマッチした
-            return true;
-            
-        } catch (error) {
-            console.error('Error checking URL:', error);
-            return false;
-        }
     }
 });

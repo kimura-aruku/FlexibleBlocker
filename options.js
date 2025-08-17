@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const directToTime = document.getElementById('directToTime');
 
     let currentParsedUrl = null;
-    let selectedIndex = -1;
+    window.selectedIndex = -1;
 
     // ページ読み込み時にブロックされたサイト一覧を表示
     loadBlockedSites();
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // 複数パートがある場合のみ選択画面を表示
-            displayUrlParts();
+            displayUrlPartsLocal();
             urlAnalysisSection.style.display = 'block';
         } catch (error) {
             console.error('URL parsing error:', error);
@@ -99,121 +99,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // URLを解析してパーツに分割する関数
-    function parseUrl(inputUrl) {
-        let url = inputUrl;
-        
-        // プロトコルを除去
-        url = url.replace(/^https?:\/\//, '');
-        
-        // URLの部分を / で分割
-        const parts = url.split('/').filter(part => part.length > 0);
-        
-        if (parts.length === 0) {
-            throw new Error('Invalid URL');
-        }
-
-        // 最初の部分（ドメイン）から www. を除去
-        if (parts[0].startsWith('www.')) {
-            parts[0] = parts[0].substring(4);
-        }
-
-        return parts;
-    }
 
     // URL部分を表示する関数
-    function displayUrlParts() {
-        urlParts.innerHTML = '';
-        selectedIndex = -1;
-        
-        // 注意メッセージを赤色にする（初期状態）
-        const noteElement = document.querySelector('#urlAnalysisSection .note');
-        noteElement.classList.add('warning');
-
-        currentParsedUrl.forEach((part, index) => {
-            const partElement = document.createElement('span');
-            partElement.className = 'url-part';
-            partElement.textContent = part;
-            partElement.dataset.index = index;
-            
-            partElement.addEventListener('click', () => selectUrlPart(index));
-            
-            urlParts.appendChild(partElement);
-            
-            // / 区切り文字を追加（最後以外）
-            if (index < currentParsedUrl.length - 1) {
-                const separator = document.createElement('span');
-                separator.className = 'url-separator';
-                separator.textContent = '/';
-                urlParts.appendChild(separator);
-            }
-        });
-
-        updateSelectedUrl();
-    }
-
-    // URL部分を選択する関数
-    function selectUrlPart(index) {
-        // 既に選択されている部分をクリックした場合は、その部分より前まで選択
-        if (selectedIndex === index) {
-            if (index === 0) {
-                // 最初の部分をクリックした場合は全て非選択
-                selectedIndex = -1;
-                
-                // 注意メッセージの赤色を復活
-                const noteElement = document.querySelector('#urlAnalysisSection .note');
-                noteElement.classList.add('warning');
-                
-                // 全ての部分の選択を解除
-                document.querySelectorAll('.url-part').forEach(element => {
-                    element.classList.remove('selected');
-                });
-            } else {
-                // 前の部分まで選択状態にする
-                selectedIndex = index - 1;
-                
-                // 全ての部分のスタイルをリセット
-                document.querySelectorAll('.url-part').forEach((element, i) => {
-                    if (i <= selectedIndex) {
-                        element.classList.add('selected');
-                    } else {
-                        element.classList.remove('selected');
-                    }
-                });
-            }
-        } else {
-            selectedIndex = index;
-            
-            // 選択されたので注意メッセージの赤色を解除
-            const noteElement = document.querySelector('#urlAnalysisSection .note');
-            noteElement.classList.remove('warning');
-            
-            // 全ての部分のスタイルをリセット
-            document.querySelectorAll('.url-part').forEach((element, i) => {
-                if (i <= index) {
-                    element.classList.add('selected');
-                } else {
-                    element.classList.remove('selected');
-                }
-            });
-        }
-
-        updateSelectedUrl();
+    function displayUrlPartsLocal() {
+        window.selectedIndex = -1;
+        displayUrlParts(urlParts, currentParsedUrl, updateSelectedUrlLocal);
     }
 
     // 選択されたURLを更新する関数
-    function updateSelectedUrl() {
-        if (selectedIndex >= 0 && currentParsedUrl) {
-            const selectedParts = currentParsedUrl.slice(0, selectedIndex + 1);
-            selectedUrl.textContent = selectedParts.join('/');
-        } else {
-            selectedUrl.textContent = '';
-        }
+    function updateSelectedUrlLocal() {
+        updateSelectedUrl(selectedUrl, currentParsedUrl);
     }
 
     // 選択されたサイトを追加する関数
     async function addSelectedSite() {
-        if (selectedIndex < 0 || !currentParsedUrl) {
+        if (window.selectedIndex < 0 || !currentParsedUrl) {
             // すべてのURLパーツを揺らす
             document.querySelectorAll('.url-part').forEach(part => {
                 part.classList.add('shake');
@@ -229,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const selectedParts = currentParsedUrl.slice(0, selectedIndex + 1);
+        const selectedParts = currentParsedUrl.slice(0, window.selectedIndex + 1);
         const siteToAdd = selectedParts.join('/');
 
         try {
@@ -262,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
             siteInput.value = '';
             urlAnalysisSection.style.display = 'none';
             currentParsedUrl = null;
-            selectedIndex = -1;
+            window.selectedIndex = -1;
 
             // リストを再読み込み
             loadBlockedSites();
@@ -361,14 +261,6 @@ document.addEventListener('DOMContentLoaded', function() {
         removeBtn.addEventListener('click', () => removeSite(url));
 
         return tr;
-    }
-
-    // 時間帯を表示用にフォーマットする関数
-    function formatTimeRange(fromTime, toTime) {
-        if (fromTime === '00:00' && toTime === '23:59') {
-            return '終日';
-        }
-        return `${fromTime}～${toTime}`;
     }
 
     // サイトの時間帯を更新する関数
