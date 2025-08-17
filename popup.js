@@ -195,20 +195,49 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // URL部分を選択する関数
     function selectUrlPart(index) {
-        selectedIndex = index;
-        
-        // 選択されたので注意メッセージの赤色を解除
-        const noteElement = document.querySelector('#urlAnalysisSection .note');
-        noteElement.classList.remove('warning');
-        
-        // 全ての部分のスタイルをリセット
-        document.querySelectorAll('.url-part').forEach((element, i) => {
-            if (i <= index) {
-                element.classList.add('selected');
+        // 既に選択されている部分をクリックした場合は、その部分より前まで選択
+        if (selectedIndex === index) {
+            if (index === 0) {
+                // 最初の部分をクリックした場合は全て非選択
+                selectedIndex = -1;
+                
+                // 注意メッセージの赤色を復活
+                const noteElement = document.querySelector('#urlAnalysisSection .note');
+                noteElement.classList.add('warning');
+                
+                // 全ての部分の選択を解除
+                document.querySelectorAll('.url-part').forEach(element => {
+                    element.classList.remove('selected');
+                });
             } else {
-                element.classList.remove('selected');
+                // 前の部分まで選択状態にする
+                selectedIndex = index - 1;
+                
+                // 全ての部分のスタイルをリセット
+                document.querySelectorAll('.url-part').forEach((element, i) => {
+                    if (i <= selectedIndex) {
+                        element.classList.add('selected');
+                    } else {
+                        element.classList.remove('selected');
+                    }
+                });
             }
-        });
+        } else {
+            selectedIndex = index;
+            
+            // 選択されたので注意メッセージの赤色を解除
+            const noteElement = document.querySelector('#urlAnalysisSection .note');
+            noteElement.classList.remove('warning');
+            
+            // 全ての部分のスタイルをリセット
+            document.querySelectorAll('.url-part').forEach((element, i) => {
+                if (i <= index) {
+                    element.classList.add('selected');
+                } else {
+                    element.classList.remove('selected');
+                }
+            });
+        }
 
         updateSelectedUrl();
     }
