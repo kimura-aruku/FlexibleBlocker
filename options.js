@@ -8,8 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlAnalysisSection = document.getElementById('urlAnalysisSection');
     const urlParts = document.getElementById('urlParts');
     const selectedUrl = document.getElementById('selectedUrl');
-    const fromTime = document.getElementById('fromTime');
-    const toTime = document.getElementById('toTime');
     const directFromTime = document.getElementById('directFromTime');
     const directToTime = document.getElementById('directToTime');
 

@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     let currentUrl = '';
     let currentTabId = null;
-    let selectedIndex = -1;
     
     // 現在のタブの情報を取得
     try {
