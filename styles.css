@@ -48,6 +48,12 @@ h2 {
     justify-content: space-between;
 }
 
+.blocked-sites-count {
+    font-size: 12px;
+    font-weight: normal;
+    color: #666;
+}
+
 /* セクション */
 .section {
     margin-bottom: 16px;
