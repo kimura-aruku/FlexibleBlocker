@@ -43,6 +43,9 @@ h2 {
 
 .section-title {
     margin-top: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 /* セクション */
