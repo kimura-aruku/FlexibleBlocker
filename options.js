@@ -13,14 +13,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const directFromTime = document.getElementById('directFromTime');
     const directToTime = document.getElementById('directToTime');
 
-    let currentParsedUrl = null;
     window.selectedIndex = -1;
 
     // ページ読み込み時にブロックされたサイト一覧を表示
     loadBlockedSites();
 
     // URL解析ボタンのクリックイベント
-    analyzeUrlBtn.addEventListener('click', analyzeUrl);
+    analyzeUrlBtn.addEventListener('click', () => {
+        analyzeUrl(siteInput.value.trim());
+    });
     
     // 選択されたURLを追加
     addSelectedBtn.addEventListener('click', addSelectedSite);
@@ -28,149 +29,95 @@ document.addEventListener('DOMContentLoaded', function() {
     // Enterキーでも解析できるようにする
     siteInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            analyzeUrl();
+            analyzeUrl(siteInput.value.trim());
         }
     });
 
     // URLを解析する関数
-    function analyzeUrl() {
-        const url = siteInput.value.trim();
-        
-        if (!url) {
-            alert('URLを入力してください');
-            return;
-        }
-
-        try {
-            currentParsedUrl = parseUrl(url);
-            
-            // 単一パート（ドメインのみ）の場合は即座にブロック
-            if (currentParsedUrl.length === 1) {
-                addSiteDirectly(currentParsedUrl[0]);
-                return;
+    function analyzeUrl(url) {
+        analyzeUrlWithUI(
+            url,
+            urlParts,
+            selectedUrl,
+            // 単一パートの場合
+            (singleUrl) => {
+                addSiteDirectly(singleUrl);
+            },
+            // 複数パーツ表示時
+            () => {
+                urlAnalysisSection.style.display = 'block';
+            },
+            // エラーの場合
+            (error) => {
+                console.error('URL parsing error:', error);
+                alert('有効なURLを入力してください');
+            },
+            // 空URL時
+            () => {
+                alert('URLを入力してください');
             }
-            
-            // 複数パートがある場合のみ選択画面を表示
-            displayUrlPartsLocal();
-            urlAnalysisSection.style.display = 'block';
-        } catch (error) {
-            console.error('URL parsing error:', error);
-            alert('有効なURLを入力してください');
-        }
+        );
     }
 
     // サイトを直接追加する関数
     async function addSiteDirectly(siteToAdd) {
-        try {
-            // 既存のブロックリストを取得
-            const result = await chrome.storage.local.get(['blockedSites']);
-            const blockedSites = result.blockedSites || [];
+        const fromTimeValue = directFromTime.value || '00:00';
+        const toTimeValue = directToTime.value || '23:59';
+        const siteInfo = {
+            url: siteToAdd,
+            fromTime: fromTimeValue,
+            toTime: toTimeValue
+        };
 
-            // 直接時間入力フィールドから値を取得
-            const fromTimeValue = directFromTime.value || '00:00';
-            const toTimeValue = directToTime.value || '23:59';
-
-            // サイト情報オブジェクトを作成
-            const siteInfo = {
-                url: siteToAdd,
-                fromTime: fromTimeValue,
-                toTime: toTimeValue
-            };
-
-            // 重複チェック（URLでチェック）
-            if (blockedSites.some(site => site.url === siteToAdd)) {
-                alert('このサイトは既にブロックされています');
-                return;
+        await addSiteWithCallback(
+            siteInfo,
+            // 成功時
+            (addedSite) => {
+                // 入力フィールドをクリア
+                siteInput.value = '';
+                // リストを再読み込み
+                loadBlockedSites();
+            },
+            // エラー時
+            (error) => {
+                console.error('Error adding site:', error);
+                alert(error.message);
             }
-
-            // 新しいサイトを追加
-            blockedSites.push(siteInfo);
-            await chrome.storage.local.set({ blockedSites });
-
-            // 入力フィールドをクリア
-            siteInput.value = '';
-
-            // リストを再読み込み
-            loadBlockedSites();
-            
-        } catch (error) {
-            console.error('Error adding site:', error);
-            alert('サイトの追加に失敗しました');
-        }
+        );
     }
 
 
-    // URL部分を表示する関数
-    function displayUrlPartsLocal() {
-        window.selectedIndex = -1;
-        displayUrlParts(urlParts, currentParsedUrl, updateSelectedUrlLocal);
-    }
-
-    // 選択されたURLを更新する関数
-    function updateSelectedUrlLocal() {
-        updateSelectedUrl(selectedUrl, currentParsedUrl);
-    }
 
     // 選択されたサイトを追加する関数
     async function addSelectedSite() {
-        if (window.selectedIndex < 0 || !currentParsedUrl) {
-            // すべてのURLパーツを揺らす
-            document.querySelectorAll('.url-part').forEach(part => {
-                part.classList.add('shake');
-            });
-            
-            // アニメーション終了後にクラスを削除
-            setTimeout(() => {
-                document.querySelectorAll('.url-part').forEach(part => {
-                    part.classList.remove('shake');
-                });
-            }, 500);
-            
-            return;
-        }
+        const fromTimeValue = directFromTime.value || '00:00';
+        const toTimeValue = directToTime.value || '23:59';
 
-        const selectedParts = currentParsedUrl.slice(0, window.selectedIndex + 1);
-        const siteToAdd = selectedParts.join('/');
+        await addSelectedSiteWithCallback(
+            window.currentParsedUrl,
+            fromTimeValue,
+            toTimeValue,
+            // 成功時
+            (addedSite) => {
+                // 入力フィールドとセクションをクリア
+                siteInput.value = '';
+                urlAnalysisSection.style.display = 'none';
+                window.currentParsedUrl = null;
+                window.selectedIndex = -1;
 
-        try {
-            // 既存のブロックリストを取得
-            const result = await chrome.storage.local.get(['blockedSites']);
-            const blockedSites = result.blockedSites || [];
-
-            // 時間帯情報を取得（上部の直接時間入力フィールドから）
-            const fromTimeValue = directFromTime.value || '00:00';
-            const toTimeValue = directToTime.value || '23:59';
-
-            // サイト情報オブジェクトを作成
-            const siteInfo = {
-                url: siteToAdd,
-                fromTime: fromTimeValue,
-                toTime: toTimeValue
-            };
-
-            // 重複チェック（URLでチェック）
-            if (blockedSites.some(site => site.url === siteToAdd)) {
-                alert('このサイトは既にブロックされています');
-                return;
+                // リストを再読み込み
+                loadBlockedSites();
+            },
+            // エラー時
+            (error) => {
+                console.error('Error adding site:', error);
+                alert(error.message);
+            },
+            // 選択なしの場合
+            () => {
+                shakeUrlParts();
             }
-
-            // 新しいサイトを追加
-            blockedSites.push(siteInfo);
-            await chrome.storage.local.set({ blockedSites });
-
-            // 入力フィールドとセクションをクリア
-            siteInput.value = '';
-            urlAnalysisSection.style.display = 'none';
-            currentParsedUrl = null;
-            window.selectedIndex = -1;
-
-            // リストを再読み込み
-            loadBlockedSites();
-            
-        } catch (error) {
-            console.error('Error adding site:', error);
-            alert('サイトの追加に失敗しました');
-        }
+        );
     }
 
     // ブロックされたサイト一覧を読み込む関数

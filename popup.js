@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     let currentUrl = '';
     let currentTabId = null;
-    let currentParsedUrl = null;
     let selectedIndex = -1;
     
     // 現在のタブの情報を取得
@@ -38,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // ブロックボタンのクリックイベント（URL解析処理に変更）
     blockCurrentSiteBtn.addEventListener('click', function() {
-        analyzeCurrentUrl();
+        analyzeUrl(currentUrl);
     });
 
 
@@ -58,179 +57,127 @@ document.addEventListener('DOMContentLoaded', async function() {
         window.close();
     });
 
-    // 現在のURLを解析する関数
-    function analyzeCurrentUrl() {
-        if (!currentUrl) {
-            showMessage('URLが取得できませんでした', 'error');
-            return;
-        }
-
-        try {
-            currentParsedUrl = parseUrl(currentUrl);
-            
-            // 単一パート（ドメインのみ）の場合は即座にブロック
-            if (currentParsedUrl.length === 1) {
-                addSiteDirectly(currentParsedUrl[0]);
-                return;
+    // URLを解析する関数
+    function analyzeUrl(url) {
+        analyzeUrlWithUI(
+            url,
+            urlParts,
+            selectedUrl,
+            // 単一パートの場合
+            (singleUrl) => {
+                addSiteDirectly(singleUrl);
+            },
+            // 複数パーツ表示時
+            () => {
+                blockCurrentSiteBtn.style.display = 'none';
+                urlAnalysisSection.style.display = 'block';
+            },
+            // エラーの場合
+            (error) => {
+                console.error('URL parsing error:', error);
+                showTemporaryMessage('URLの解析に失敗しました', 'error');
+            },
+            // 空URL時
+            () => {
+                showTemporaryMessage('URLが取得できませんでした', 'error');
             }
-            
-            // 複数パートがある場合のみ選択画面を表示
-            displayUrlPartsLocal();
-            // ボタンのみ非表示にして時間帯入力は表示したまま
-            blockCurrentSiteBtn.style.display = 'none';
-            urlAnalysisSection.style.display = 'block';
-        } catch (error) {
-            console.error('URL parsing error:', error);
-            showMessage('URLの解析に失敗しました', 'error');
-        }
+        );
     }
 
     // サイトを直接追加する関数
     async function addSiteDirectly(siteToAdd) {
-        try {
-            // 既存のブロックリストを取得
-            const result = await chrome.storage.local.get(['blockedSites']);
-            const blockedSites = result.blockedSites || [];
+        const fromTimeValue = simpleFromTime.value || '00:00';
+        const toTimeValue = simpleToTime.value || '23:59';
+        const siteInfo = {
+            url: siteToAdd,
+            fromTime: fromTimeValue,
+            toTime: toTimeValue
+        };
 
-            // シンプル時間入力フィールドから値を取得
-            const fromTimeValue = simpleFromTime.value || '00:00';
-            const toTimeValue = simpleToTime.value || '23:59';
-
-            // サイト情報オブジェクトを作成
-            const siteInfo = {
-                url: siteToAdd,
-                fromTime: fromTimeValue,
-                toTime: toTimeValue
-            };
-
-            // 重複チェック（URLでチェック）
-            if (blockedSites.some(site => site.url === siteToAdd)) {
-                showMessage('このサイトは既にブロックされています', 'error');
-                return;
-            }
-
-            // 新しいサイトを追加
-            blockedSites.push(siteInfo);
-            await chrome.storage.local.set({ blockedSites });
-
-            await updateBlockStatus();
-            
-            // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
-            if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteInfo)) {
-                console.log('Current site matches new block rule, redirecting...');
-                const blockUrl = chrome.runtime.getURL('block.html') + '?blocked=' + encodeURIComponent(currentUrl);
-                try {
-                    // 少し遅延を入れてから確実にリダイレクト
-                    setTimeout(async () => {
-                        try {
-                            await chrome.tabs.update(currentTabId, { url: blockUrl });
-                            window.close(); // ポップアップを閉じる
-                        } catch (redirectError) {
-                            console.error('Error redirecting to block page:', redirectError);
-                        }
-                    }, 100);
-                } catch (error) {
-                    console.error('Error setting up redirect:', error);
+        await addSiteWithCallback(
+            siteInfo,
+            // 成功時
+            async (addedSite) => {
+                await updateBlockStatus();
+                
+                // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
+                if (currentUrl && currentTabId && isUrlBlocked(currentUrl, addedSite)) {
+                    console.log('Current site matches new block rule, redirecting...');
+                    const blockUrl = chrome.runtime.getURL('block.html') + '?blocked=' + encodeURIComponent(currentUrl);
+                    try {
+                        // 少し遅延を入れてから確実にリダイレクト
+                        setTimeout(async () => {
+                            try {
+                                await chrome.tabs.update(currentTabId, { url: blockUrl });
+                                window.close(); // ポップアップを閉じる
+                            } catch (redirectError) {
+                                console.error('Error redirecting to block page:', redirectError);
+                            }
+                        }, 100);
+                    } catch (error) {
+                        console.error('Error setting up redirect:', error);
+                    }
                 }
+            },
+            // エラー時
+            (error) => {
+                console.error('Error adding site:', error);
+                showTemporaryMessage(error.message, 'error');
             }
-            
-        } catch (error) {
-            console.error('Error adding site:', error);
-            showMessage('サイトの追加に失敗しました', 'error');
-        }
+        );
     }
 
 
-    // URL部分を表示する関数
-    function displayUrlPartsLocal() {
-        window.selectedIndex = -1;
-        displayUrlParts(urlParts, currentParsedUrl, updateSelectedUrlLocal);
-    }
-
-    // 選択されたURLを更新する関数
-    function updateSelectedUrlLocal() {
-        updateSelectedUrl(selectedUrl, currentParsedUrl);
-    }
 
     // 選択されたサイトを追加する関数
     async function addSelectedSite() {
-        if (window.selectedIndex < 0 || !currentParsedUrl) {
-            // すべてのURLパーツを揺らす
-            document.querySelectorAll('.url-part').forEach(part => {
-                part.classList.add('shake');
-            });
-            
-            // アニメーション終了後にクラスを削除
-            setTimeout(() => {
-                document.querySelectorAll('.url-part').forEach(part => {
-                    part.classList.remove('shake');
-                });
-            }, 500);
-            
-            return;
-        }
+        const fromTimeValue = simpleFromTime.value || '00:00';
+        const toTimeValue = simpleToTime.value || '23:59';
 
-        const selectedParts = currentParsedUrl.slice(0, window.selectedIndex + 1);
-        const siteToAdd = selectedParts.join('/');
+        await addSelectedSiteWithCallback(
+            window.currentParsedUrl,
+            fromTimeValue,
+            toTimeValue,
+            // 成功時
+            async (addedSite) => {
+                // セクションをクリア
+                urlAnalysisSection.style.display = 'none';
+                // ボタンを再表示
+                blockCurrentSiteBtn.style.display = 'block';
+                window.currentParsedUrl = null;
+                window.selectedIndex = -1;
 
-        try {
-            // 既存のブロックリストを取得
-            const result = await chrome.storage.local.get(['blockedSites']);
-            const blockedSites = result.blockedSites || [];
-
-            // 時間帯情報を取得（上部のシンプル時間入力フィールドから）
-            const fromTimeValue = simpleFromTime.value || '00:00';
-            const toTimeValue = simpleToTime.value || '23:59';
-
-            // サイト情報オブジェクトを作成
-            const siteInfo = {
-                url: siteToAdd,
-                fromTime: fromTimeValue,
-                toTime: toTimeValue
-            };
-
-            // 重複チェック（URLでチェック）
-            if (blockedSites.some(site => site.url === siteToAdd)) {
-                showMessage('このサイトは既にブロックされています', 'error');
-                return;
-            }
-
-            // 新しいサイトを追加
-            blockedSites.push(siteInfo);
-            await chrome.storage.local.set({ blockedSites });
-
-            // セクションをクリア
-            urlAnalysisSection.style.display = 'none';
-            // ボタンを再表示
-            blockCurrentSiteBtn.style.display = 'block';
-            currentParsedUrl = null;
-            selectedIndex = -1;
-
-            await updateBlockStatus();
-            
-            // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
-            if (currentUrl && currentTabId && isUrlBlocked(currentUrl, siteInfo)) {
-                console.log('Current site matches new block rule, redirecting...');
-                const blockUrl = chrome.runtime.getURL('block.html') + '?blocked=' + encodeURIComponent(currentUrl);
-                try {
-                    // 少し遅延を入れてから確実にリダイレクト
-                    setTimeout(async () => {
-                        try {
-                            await chrome.tabs.update(currentTabId, { url: blockUrl });
-                            window.close(); // ポップアップを閉じる
-                        } catch (redirectError) {
-                            console.error('Error redirecting to block page:', redirectError);
-                        }
-                    }, 100);
-                } catch (error) {
-                    console.error('Error setting up redirect:', error);
+                await updateBlockStatus();
+                
+                // 現在のサイトがブロック対象になった場合、即座にブロック画面にリダイレクト
+                if (currentUrl && currentTabId && isUrlBlocked(currentUrl, addedSite)) {
+                    console.log('Current site matches new block rule, redirecting...');
+                    const blockUrl = chrome.runtime.getURL('block.html') + '?blocked=' + encodeURIComponent(currentUrl);
+                    try {
+                        // 少し遅延を入れてから確実にリダイレクト
+                        setTimeout(async () => {
+                            try {
+                                await chrome.tabs.update(currentTabId, { url: blockUrl });
+                                window.close(); // ポップアップを閉じる
+                            } catch (redirectError) {
+                                console.error('Error redirecting to block page:', redirectError);
+                            }
+                        }, 100);
+                    } catch (error) {
+                        console.error('Error setting up redirect:', error);
+                    }
                 }
+            },
+            // エラー時
+            (error) => {
+                console.error('Error adding site:', error);
+                showTemporaryMessage(error.message, 'error');
+            },
+            // 選択なしの場合
+            () => {
+                shakeUrlParts();
             }
-            
-        } catch (error) {
-            console.error('Error adding site:', error);
-            showMessage('サイトの追加に失敗しました', 'error');
-        }
+        );
     }
 
     // 現在のサイトのブロック状況を更新する関数
@@ -286,29 +233,4 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
 
-    // 一時的なメッセージを表示する関数
-    function showMessage(message, type = 'success') {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${type}`;
-        messageDiv.textContent = message;
-        messageDiv.style.cssText = `
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            padding: 8px;
-            background: ${type === 'error' ? '#ff4444' : '#44aa44'};
-            color: white;
-            border-radius: 4px;
-            font-size: 12px;
-            text-align: center;
-            z-index: 1000;
-        `;
-        
-        document.body.appendChild(messageDiv);
-        
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 2000);
-    }
 });

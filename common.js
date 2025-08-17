@@ -216,3 +216,148 @@ function formatTimeRange(fromTime, toTime) {
     }
     return `${fromTime}～${toTime}`;
 }
+
+// ===== コールバック方式の共通関数 =====
+
+// URL解析と処理の共通関数
+function analyzeUrlWithCallback(url, onSinglePart, onMultipleParts, onError) {
+    try {
+        const parsedUrl = parseUrl(url);
+        if (parsedUrl.length === 1) {
+            onSinglePart(parsedUrl[0]);
+        } else {
+            onMultipleParts(parsedUrl);
+        }
+    } catch (error) {
+        onError(error);
+    }
+}
+
+// URL部分表示の共通関数
+function displayUrlPartsWithCallback(urlPartsElement, parsedUrl, updateCallback, onShow) {
+    window.selectedIndex = -1;
+    displayUrlParts(urlPartsElement, parsedUrl, updateCallback);
+    if (onShow) onShow();
+}
+
+// サイト追加の共通関数
+async function addSiteWithCallback(siteInfo, onSuccess, onError) {
+    try {
+        const result = await chrome.storage.local.get(['blockedSites']);
+        const blockedSites = result.blockedSites || [];
+        
+        // 重複チェック
+        if (blockedSites.some(site => site.url === siteInfo.url)) {
+            onError(new Error('このサイトは既にブロックされています'));
+            return;
+        }
+        
+        // 新しいサイトを追加
+        blockedSites.push(siteInfo);
+        await chrome.storage.local.set({ blockedSites });
+        onSuccess(siteInfo);
+    } catch (error) {
+        onError(error);
+    }
+}
+
+// 選択されたサイト追加の共通関数
+async function addSelectedSiteWithCallback(
+    currentParsedUrl,
+    fromTimeValue,
+    toTimeValue,
+    onSuccess,
+    onError,
+    onNoSelection
+) {
+    if (window.selectedIndex < 0 || !currentParsedUrl) {
+        onNoSelection();
+        return;
+    }
+    
+    const selectedParts = currentParsedUrl.slice(0, window.selectedIndex + 1);
+    const siteToAdd = selectedParts.join('/');
+    
+    const siteInfo = {
+        url: siteToAdd,
+        fromTime: fromTimeValue,
+        toTime: toTimeValue
+    };
+    
+    await addSiteWithCallback(siteInfo, onSuccess, onError);
+}
+
+// 一時メッセージ表示の共通関数
+function showTemporaryMessage(message, type = 'success', customStyle = null) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
+    
+    const defaultStyle = `
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        padding: 8px;
+        background: ${type === 'error' ? '#ff4444' : '#44aa44'};
+        color: white;
+        border-radius: 4px;
+        font-size: 12px;
+        text-align: center;
+        z-index: 1000;
+    `;
+    
+    messageDiv.style.cssText = customStyle || defaultStyle;
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 2000);
+}
+
+// URLパーツ振動エフェクトの共通関数
+function shakeUrlParts() {
+    document.querySelectorAll('.url-part').forEach(part => {
+        part.classList.add('shake');
+    });
+    
+    setTimeout(() => {
+        document.querySelectorAll('.url-part').forEach(part => {
+            part.classList.remove('shake');
+        });
+    }, 500);
+}
+
+// URL解析の共通関数（UI要素とコールバック付き）
+function analyzeUrlWithUI(
+    url,
+    urlPartsElement,
+    selectedUrlElement,
+    onSinglePartSuccess,
+    onMultiplePartsShow,
+    onError,
+    onEmptyUrl
+) {
+    if (!url) {
+        onEmptyUrl();
+        return;
+    }
+
+    analyzeUrlWithCallback(
+        url,
+        // 単一パートの場合
+        onSinglePartSuccess,
+        // 複数パートの場合
+        (parsedUrl) => {
+            window.currentParsedUrl = parsedUrl;
+            displayUrlPartsWithCallback(
+                urlPartsElement,
+                parsedUrl,
+                () => updateSelectedUrl(selectedUrlElement, parsedUrl),
+                onMultiplePartsShow
+            );
+        },
+        // エラーの場合
+        onError
+    );
+}
