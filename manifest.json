@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FlexibleBlocker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "時間帯ごとに指定サイトへのアクセスを制限し、制限時間中は警告ページにリダイレクトする拡張機能。",
   "permissions": [
     "storage",
